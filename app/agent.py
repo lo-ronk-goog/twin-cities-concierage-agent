@@ -30,7 +30,7 @@ except Exception:
 
 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", default_project_id)
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
+os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 persona_instruction = (
@@ -49,7 +49,7 @@ persona_instruction = (
 )
 
 root_agent = Agent(
-    name="msp_vibe_director",
+    name="twin_cities_concierage_agent",
     model=Gemini(
         model="gemini-flash-latest",
         retry_options=types.HttpRetryOptions(attempts=3),

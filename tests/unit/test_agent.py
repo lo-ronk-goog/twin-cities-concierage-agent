@@ -17,7 +17,7 @@ from app.tools import bigquery_mcp_toolset
 
 def test_agent_config():
     """Verify that the agent is initialized with correct instructions and tools."""
-    assert root_agent.name == "msp_vibe_director"
+    assert root_agent.name == "twin_cities_concierage_agent"
     assert "concierge" in root_agent.instruction.lower()
     assert "jazz" in root_agent.instruction.lower()
     assert "coffee" in root_agent.instruction.lower()

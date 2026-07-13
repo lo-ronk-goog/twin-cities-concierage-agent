@@ -15,7 +15,7 @@
 variable "project_name" {
   type        = string
   description = "Project name used as a base for resource naming"
-  default     = "msp-vibe-director"
+  default     = "twin-cities-concierage-agent"
 }
 
 variable "prod_project_id" {
@@ -36,13 +36,13 @@ variable "cicd_runner_project_id" {
 variable "region" {
   type        = string
   description = "Google Cloud region for resource deployment."
-  default     = "us-east1"
+  default     = "us-central1"
 }
 
 variable "host_connection_name" {
   description = "Name of the host connection to create in Cloud Build"
   type        = string
-  default     = "msp-vibe-director-github-connection"
+  default     = "twin-cities-concierage-agent-github-connection"
 }
 
 variable "repository_name" {
@@ -104,6 +104,6 @@ variable "create_repository" {
 variable "feedback_logs_filter" {
   type        = string
   description = "Log Sink filter for capturing feedback data. Captures logs where the `log_type` field is `feedback`."
-  default     = "jsonPayload.log_type=\"feedback\" jsonPayload.service_name=\"msp-vibe-director\""
+  default     = "jsonPayload.log_type=\"feedback\" jsonPayload.service_name=\"twin-cities-concierage-agent\""
 }
 

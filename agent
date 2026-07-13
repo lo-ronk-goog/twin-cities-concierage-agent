@@ -20,17 +20,17 @@ COMMAND=$1
 case "$COMMAND" in
   test)
     echo "========================================="
-    echo "🚀 Running msp-vibe-director evaluations..."
+    echo "🚀 Running twin-cities-concierage-agent evaluations..."
     echo "========================================="
     agents-cli eval run
     ;;
   deploy)
     echo "========================================="
-    echo "🚀 Deploying msp-vibe-director to Agent Engine (Production)..."
+    echo "🚀 Deploying twin-cities-concierage-agent to Agent Engine (Production)..."
     echo "========================================="
     agents-cli deploy \
       --project lpr-gemini-enterprise-1 \
-      --region us-east1 \
+      --region us-central1 \
       --no-confirm-project
     ;;
   *)

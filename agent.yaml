@@ -1,15 +1,15 @@
 # agent.yaml - Standard Agent CLI deployment manifest
-name: msp-vibe-director
+name: twin-cities-concierage-agent
 framework: google-adk
 entrypoint: app.agent_runtime_app:agent_runtime
-region: us-east1
+region: us-central1
 
 environments:
   dev:
     project_id: lpr-gemini-enterprise-1
     service_account: app-sa-staging@lpr-gemini-enterprise-1.iam.gserviceaccount.com
-    logs_bucket: msp-vibe-director-logs-staging
+    logs_bucket: twin-cities-concierage-agent-logs-staging
   prod:
     project_id: lpr-gemini-enterprise-1
     service_account: app-sa-prod@lpr-gemini-enterprise-1.iam.gserviceaccount.com
-    logs_bucket: msp-vibe-director-logs-prod
+    logs_bucket: twin-cities-concierage-agent-logs-prod

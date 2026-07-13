@@ -1,5 +1,5 @@
 [project]
-name = "msp-vibe-director"
+name = "twin-cities-concierage-agent"
 version = "0.1.0"
 description = ""
 authors = [
@@ -105,7 +105,7 @@ packages = ["app","frontend"]
 [tool.agents-cli]
 # Generation metadata - enables CLI commands to understand project context
 # These fields allow any generated project to work as a remote template
-name = "msp-vibe-director"
+name = "twin-cities-concierage-agent"
 description = "Simple ReAct agent"
 base_template = "adk"
 agent_directory = "app"

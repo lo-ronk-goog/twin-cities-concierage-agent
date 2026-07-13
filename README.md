@@ -1,4 +1,4 @@
-# 🤖 msp-vibe-director
+# 🤖 twin-cities-concierage-agent
 
 An expert, friendly local concierge agent for the Minneapolis-Twin Cities area. It helps users plan the perfect day or night out, specializing in coffee shops, casual bars, and live jazz venues. 
 
@@ -14,7 +14,7 @@ The following diagram illustrates how the user, the Vertex AI Agent Engine, the 
 graph TD
     User([User]) <-->|Chat Interface| AE[Vertex AI Agent Engine]
     subgraph AE [Agent Engine Runtime]
-        ADK[ADK Agent Framework] <-->|ReAct Loop| Agent[msp_vibe_director Agent]
+        ADK[ADK Agent Framework] <-->|ReAct Loop| Agent[twin_cities_concierage_agent Agent]
         Agent <-->|Stdio Stream| MCP[BigQuery MCP Server]
     end
     MCP <-->|BigQuery API| BQ[(GCP BigQuery DB)]
@@ -81,7 +81,7 @@ sequenceDiagram
 ## 📂 Project Structure
 
 ```
-msp-vibe-director/
+twin-cities-concierage-agent/
 ├── .github/workflows/         # CI/CD workflows (ci.yml)
 ├── app/                       # Core agent implementation
 │   ├── agent.py               # Persona instructions & tool definitions
