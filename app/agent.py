@@ -22,7 +22,7 @@ from google.genai import types
 
 from app.tools import bigquery_mcp_toolset
 
-# CI test comment: testing DevOps pipeline execution with agents-cli installed
+# CI test comment: testing DevOps pipeline execution with pinned agents-cli
 try:
     _, default_project_id = google.auth.default()
 except Exception:
