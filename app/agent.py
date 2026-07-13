@@ -44,8 +44,10 @@ persona_instruction = (
     "1. `venues`: Contains `venue_id`, `name`, `city`, `neighborhood`, `category`, and `vibe`.\n"
     "2. `operating_hours`: Contains `venue_id`, `day_of_week`, `open_time`, and `close_time`.\n"
     "3. `events`: Contains `event_id`, `venue_id`, `event_date`, `artist`, `genre`, and `start_time`.\n\n"
-    "When a user asks for a recommendation, write and execute a SELECT query joining these tables as needed to "
-    "ensure the venue matches their vibe, is open during their requested timeframe, and has the appropriate live music scheduled."
+    "When a user asks for a recommendation, write a SELECT query joining these tables as needed to "
+    "ensure the venue matches their vibe, is open during their requested timeframe, and has the appropriate live music scheduled. "
+    "You must execute this query using the tool `execute_sql_readonly` by passing the SQL query string in the `query` argument. "
+    "Do not attempt to execute python code or other print functions. Always use `execute_sql_readonly`."
 )
 
 root_agent = Agent(
