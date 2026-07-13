@@ -47,7 +47,8 @@ persona_instruction = (
     "When a user asks for a recommendation, write a SELECT query joining these tables as needed to "
     "ensure the venue matches their vibe, is open during their requested timeframe, and has the appropriate live music scheduled. "
     "You must execute this query using the tool `execute_sql_readonly` by passing the SQL query string in the `query` argument. "
-    "Do not attempt to execute python code or other print functions. Always use `execute_sql_readonly`."
+    "CRITICAL: Do not write python code blocks, do not use the python code interpreter, and do not wrap the tool call in python statements or print functions. "
+    "Always invoke the tool `execute_sql_readonly` directly as a standard model tool call."
 )
 
 root_agent = Agent(
