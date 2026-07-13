@@ -1,7 +1,8 @@
 # msp-vibe-director
 
-Simple ReAct agent
-Agent generated with `agents-cli` version `0.1.3`
+A friendly, expert local concierge agent for the Minneapolis-Twin Cities area, specializing in coffee shops, casual bars, and live jazz venues. Powered by the Google ADK and integrated with a BigQuery database via a custom stdio MCP tool.
+
+Developed using the `agents-cli` opinionated workflow.
 
 ## Project Structure
 
