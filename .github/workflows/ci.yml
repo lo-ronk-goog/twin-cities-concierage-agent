@@ -56,11 +56,8 @@ jobs:
           create_credentials_file: true
           project_id: ${{ vars.CICD_PROJECT_ID }}
 
-      - name: Add workspace to PATH
-        run: echo "${{ github.workspace }}" >> $GITHUB_PATH
-
       - name: Run Evals (agent test)
-        run: agent test
+        run: ./agent test
 
   deploy:
     name: Deploy to Production
@@ -93,8 +90,5 @@ jobs:
           create_credentials_file: true
           project_id: ${{ vars.CICD_PROJECT_ID }}
 
-      - name: Add workspace to PATH
-        run: echo "${{ github.workspace }}" >> $GITHUB_PATH
-
       - name: Deploy Agent (agent deploy)
-        run: agent deploy
+        run: ./agent deploy
