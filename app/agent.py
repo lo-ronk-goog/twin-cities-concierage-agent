@@ -22,7 +22,7 @@ from google.genai import types
 
 from app.tools import bigquery_mcp_toolset
 
-# CI test comment: testing DevOps pipeline execution with WIF credentials configured
+# CI test comment: testing DevOps pipeline execution with WIF credentials fully active
 try:
     _, default_project_id = google.auth.default()
 except Exception:
