@@ -1,84 +1,110 @@
-# msp-vibe-director
+# 🤖 msp-vibe-director
 
-A friendly, expert local concierge agent for the Minneapolis-Twin Cities area, specializing in coffee shops, casual bars, and live jazz venues. Powered by the Google ADK and integrated with a BigQuery database via a custom stdio MCP tool.
+An expert, friendly local concierge agent for the Minneapolis-Twin Cities area. It helps users plan the perfect day or night out, specializing in coffee shops, casual bars, and live jazz venues. 
 
-Developed using the `agents-cli` opinionated workflow.
-
-## Project Structure
-
-```
-msp-vibe-director/
-├── app/         # Core agent code
-│   ├── agent.py               # Main agent logic
-│   ├── agent_runtime_app.py    # Agent Runtime application logic
-│   └── app_utils/             # App utilities and helpers
-├── .github/                   # CI/CD pipeline configurations for GitHub Actions
-├── deployment/                # Infrastructure and deployment scripts
-├── tests/                     # Unit, integration, and load tests
-├── GEMINI.md                  # AI-assisted development guide
-└── pyproject.toml             # Project dependencies
-```
-
-> 💡 **Tip:** Use [Gemini CLI](https://github.com/google-gemini/gemini-cli) for AI-assisted development - project context is pre-configured in `GEMINI.md`.
-
-## Requirements
-
-Before you begin, ensure you have:
-- **uv**: Python package manager (used for all dependency management in this project) - [Install](https://docs.astral.sh/uv/getting-started/installation/) ([add packages](https://docs.astral.sh/uv/concepts/dependencies/) with `uv add <package>`)
-- **agents-cli**: Agents CLI - Install with `uv tool install google-agents-cli`
-- **Google Cloud SDK**: For GCP services - [Install](https://cloud.google.com/sdk/docs/install)
-- **Terraform**: For infrastructure deployment - [Install](https://developer.hashicorp.com/terraform/downloads)
-
-
-## Quick Start
-
-Install required packages:
-
-```bash
-agents-cli install
-```
-
-Test the agent with a local web server:
-
-```bash
-agents-cli playground
-```
-
-You can also use features from the [ADK](https://adk.dev/) CLI with `uv run adk`.
-
-## Commands
-
-| Command              | Description                                                                                 |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| `agents-cli install` | Install dependencies using uv                                                         |
-| `agents-cli playground` | Launch local development environment                                                  |
-| `agents-cli lint`    | Run code quality checks                                                               |
-| `uv run pytest tests/unit tests/integration` | Run unit and integration tests                                                        |
-| `agents-cli deploy`  | Deploy agent to Agent Runtime                                                                |
-| `agents-cli publish gemini-enterprise` | Register deployed agent to Gemini Enterprise                    |
-| `agents-cli infra single-project` | Set up single-project infrastructure using Terraform                              |
-
-## 🛠️ Project Management
-
-| Command | What It Does |
-|---------|--------------|
-| `agents-cli infra cicd` | One-command setup of entire CI/CD pipeline + infrastructure |
-| `agents-cli scaffold upgrade` | Auto-upgrade to latest version while preserving customizations |
+The agent operates in a **ReAct loop**, writing and executing SQL queries to verify venue operating hours, location details, and live music schedules in real-time from a **Google Cloud BigQuery** database using a custom **Model Context Protocol (MCP)** connection.
 
 ---
 
-## Development
+## 🏗️ System Architecture
 
-Edit your agent logic in `app/agent.py` and test with `agents-cli playground` - it auto-reloads on save.
+The following diagram illustrates how the user, the Vertex AI Agent Engine, the Python ADK framework, the Stdio-based MCP server, and BigQuery interact:
 
-## Deployment
-
-```bash
-gcloud config set project <your-project-id>
-agents-cli deploy
+```mermaid
+graph TD
+    User([User]) <-->|Chat Interface| AE[Vertex AI Agent Engine]
+    subgraph AE [Agent Engine Runtime]
+        ADK[ADK Agent Framework] <-->|ReAct Loop| Agent[msp_vibe_director Agent]
+        Agent <-->|Stdio Stream| MCP[BigQuery MCP Server]
+    end
+    MCP <-->|BigQuery API| BQ[(GCP BigQuery DB)]
+    BQ -.-> V[venues table]
+    BQ -.-> O[operating_hours table]
+    BQ -.-> E[events table]
+    
+    style User fill:#e1f5fe,stroke:#039be5,stroke-width:2px
+    style AE fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px
+    style BQ fill:#efebe9,stroke:#5d4037,stroke-width:2px
 ```
-To set up your production infrastructure, run `agents-cli infra cicd`.
 
-## Observability
+---
 
-Built-in telemetry exports to Cloud Trace, BigQuery, and Cloud Logging.
+## 🚀 DevOps CI/CD Pipeline
+
+The project features a full DevOps CI/CD pipeline built on **GitHub Actions** and secured via **Workload Identity Federation (WIF)**, eliminating the need to store static GCP service account keys in GitHub.
+
+### Pipeline Workflow Strategy:
+1. **Continuous Integration (CI) on `dev`**: 
+   - Every push to the `dev` branch triggers the test pipeline.
+   - It authenticates to GCP, spins up the environment, and runs automated unit tests and agent evaluations (`agents-cli eval run`).
+   - This ensures that code changes are fully validated before any merge request can be created.
+2. **Continuous Delivery (CD) on `main`**:
+   - Once tests are successful and the pull request is merged into the `main` branch, the deployment pipeline is triggered.
+   - It packages and deploys the agent code to the Vertex AI Reasoning Engine on GCP.
+
+### CI/CD Pipeline Flow:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Developer
+    participant GitDev as Git dev branch
+    participant GHA as GitHub Actions Runner
+    participant GitMain as Git main branch
+    participant AE as Vertex AI Agent Engine
+
+    Developer->>GitDev: Push changes (e.g. app/agent.py)
+    activate GitDev
+    GitDev->>GHA: Trigger CI Workflow (push: dev)
+    activate GHA
+    GHA->>GHA: Authenticate via WIF
+    GHA->>GHA: Run Unit Tests (pytest)
+    GHA->>GHA: Run Evaluations (agents-cli eval run)
+    GHA-->>Developer: CI Result: SUCCESS
+    deactivate GHA
+    deactivate GitDev
+
+    Developer->>GitMain: Create & Merge Pull Request
+    activate GitMain
+    GitMain->>GHA: Trigger CD Workflow (push: main)
+    activate GHA
+    GHA->>GHA: Authenticate via WIF
+    GHA->>AE: Deploy Agent (agents-cli deploy)
+    AE-->>GHA: Deployment Successful (ID returned)
+    GHA-->>Developer: Agent Live in Production
+    deactivate GHA
+    deactivate GitMain
+```
+
+---
+
+## 📂 Project Structure
+
+```
+msp-vibe-director/
+├── .github/workflows/         # CI/CD workflows (ci.yml)
+├── app/                       # Core agent implementation
+│   ├── agent.py               # Persona instructions & tool definitions
+│   ├── tools.py               # MCP BigQuery toolset configuration
+│   ├── mcp_server.py          # Stdio-based Model Context Protocol server
+│   └── agent_runtime_app.py   # ADK entrypoint application logic
+├── deployment/                # Environment infrastructure
+│   └── terraform/             # IaC definitions (WIF, datasets, sinks)
+├── tests/                     # Validation suite
+│   ├── unit/                  # Local configuration unit tests
+│   └── eval/                  # Persona-based agent evaluation cases
+├── agent                      # Wrapper script for CI/CD commands
+└── agent.yaml                 # Deployment manifest parameters
+```
+
+---
+
+## 🛠️ Commands Cheat Sheet
+
+| Action | Command | Description |
+| :--- | :--- | :--- |
+| **Install** | `agents-cli install` | Syncs virtual environment dependencies |
+| **Playground** | `agents-cli playground` | Launches local interactive agent UI |
+| **Run Evals** | `./agent test` | Evaluates agent persona against test sets |
+| **Deploy** | `./agent deploy` | Deploys the local agent to Vertex AI Agent Engine |
+| **IaC Provision** | `agents-cli infra cicd` | Provisions GCP WIF infrastructure and registers secrets |
