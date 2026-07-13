@@ -64,7 +64,7 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
 
     try:
         # Initialize standard BigQuery client (uses default auth credentials)
-        client = bigquery.Client()
+        client = bigquery.Client(project="lpr-gemini-enterprise-1")
         query_job = client.query(query)
         results = query_job.result()
         
