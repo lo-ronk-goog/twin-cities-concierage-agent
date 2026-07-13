@@ -1,0 +1,91 @@
+name: Agent DevOps CI/CD
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - 'agent'
+      - 'pyproject.toml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - 'agent'
+      - 'pyproject.toml'
+
+jobs:
+  test:
+    name: Run Agent Tests
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.0.0
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Authenticate to Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: 'projects/${{ vars.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.WIF_POOL_ID }}/providers/${{ secrets.WIF_PROVIDER_ID }}'
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+          create_credentials_file: true
+          project_id: ${{ vars.CICD_PROJECT_ID }}
+
+      - name: Add workspace to PATH
+        run: echo "${{ github.workspace }}" >> $GITHUB_PATH
+
+      - name: Run Evals (agent test)
+        run: agent test
+
+  deploy:
+    name: Deploy to Production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.0.0
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Authenticate to Google Cloud
+        uses: 'google-github-actions/auth@v2'
+        with:
+          workload_identity_provider: 'projects/${{ vars.GCP_PROJECT_NUMBER }}/locations/global/workloadIdentityPools/${{ secrets.WIF_POOL_ID }}/providers/${{ secrets.WIF_PROVIDER_ID }}'
+          service_account: '${{ secrets.GCP_SERVICE_ACCOUNT }}'
+          create_credentials_file: true
+          project_id: ${{ vars.CICD_PROJECT_ID }}
+
+      - name: Add workspace to PATH
+        run: echo "${{ github.workspace }}" >> $GITHUB_PATH
+
+      - name: Deploy Agent (agent deploy)
+        run: agent deploy

@@ -1,0 +1,37 @@
+{
+  "eval_set_id": "concierge_eval",
+  "name": "Twin Cities Concierge Evaluation",
+  "description": "Evaluation set for testing the local Twin Cities concierge recommendations.",
+  "eval_cases": [
+    {
+      "eval_id": "coffee_recommendation",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [{"text": "I'm looking for a coffee shop in Minneapolis with a cozy vibe for this afternoon."}]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "live_jazz_recommendation",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [{"text": "Recommend a live jazz venue for Friday night where I can listen to some swing music."}]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "eval_user",
+        "state": {}
+      }
+    }
+  ]
+}

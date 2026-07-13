@@ -1,0 +1,15 @@
+# agent.yaml - Standard Agent CLI deployment manifest
+name: msp-vibe-director
+framework: google-adk
+entrypoint: app.agent_runtime_app:agent_runtime
+region: us-east1
+
+environments:
+  dev:
+    project_id: lpr-gemini-enterprise-1
+    service_account: app-sa-staging@lpr-gemini-enterprise-1.iam.gserviceaccount.com
+    logs_bucket: msp-vibe-director-logs-staging
+  prod:
+    project_id: lpr-gemini-enterprise-1
+    service_account: app-sa-prod@lpr-gemini-enterprise-1.iam.gserviceaccount.com
+    logs_bucket: msp-vibe-director-logs-prod
