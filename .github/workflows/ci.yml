@@ -1,3 +1,11 @@
+# Agent DevOps CI/CD Pipeline
+# 
+# Workflow Strategy:
+# 1. CI (Test Stage): Triggered on any push to the 'dev' branch (for pre-merge validation) 
+#    and on any pull request targeting the 'main' branch. Runs unit and evaluation tests.
+# 2. CD (Deployment Stage): Triggered automatically when code is merged (pushed) to 'main'.
+#    Deploys the agent to Agent Engine (Vertex AI Reasoning Engine).
+
 name: Agent DevOps CI/CD
 
 on:
