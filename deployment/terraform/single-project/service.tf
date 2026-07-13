@@ -20,7 +20,7 @@ locals {
 }
 
 resource "google_vertex_ai_reasoning_engine" "app" {
-  display_name = var.project_name
+  display_name = "Twin Cities Concierage Agent"
   description  = "Agent deployed via Terraform"
   region       = var.region
   project      = var.project_id

@@ -28,10 +28,17 @@ case "$COMMAND" in
     echo "========================================="
     echo "🚀 Deploying twin-cities-concierage-agent to Agent Engine (Production)..."
     echo "========================================="
-    agents-cli deploy \
-      --project lpr-gemini-enterprise-1 \
-      --region us-central1 \
-      --no-confirm-project
+    uv run --with google-agents-cli==0.1.3 python -c "
+from google.agents.cli._project import read_project_config
+from google.agents.cli.deploy.agent_runtime import deploy_agent_runtime
+cfg = read_project_config()
+deploy_agent_runtime(
+    cfg=cfg,
+    project='lpr-gemini-enterprise-1',
+    location='us-central1',
+    display_name='Twin Cities Concierage Agent',
+)
+"
     ;;
   *)
     echo "Usage: ./agent {test|deploy}"

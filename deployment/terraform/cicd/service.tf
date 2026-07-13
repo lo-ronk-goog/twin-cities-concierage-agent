@@ -22,7 +22,7 @@ locals {
 resource "google_vertex_ai_reasoning_engine" "app" {
   for_each = local.deploy_project_ids
 
-  display_name = var.project_name
+  display_name = "Twin Cities Concierage Agent"
   description  = "Agent deployed via Terraform"
   region       = var.region
   project      = each.value
