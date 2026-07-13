@@ -22,7 +22,7 @@ case "$COMMAND" in
     echo "========================================="
     echo "🚀 Running msp-vibe-director evaluations..."
     echo "========================================="
-    agents-cli eval run --all
+    agents-cli eval run
     ;;
   deploy)
     echo "========================================="
