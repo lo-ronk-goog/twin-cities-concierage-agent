@@ -21,6 +21,8 @@ from google.adk.models import Gemini
 from google.genai import types
 
 from app.tools import execute_sql_tool
+from google.adk.tools.preload_memory_tool import PreloadMemoryTool
+from google.adk.agents.callback_context import CallbackContext
 
 # CI test comment: testing DevOps pipeline execution with pinned agents-cli
 try:
@@ -51,6 +53,11 @@ persona_instruction = (
     "Always invoke the tool `execute_sql_readonly` directly as a standard model tool call."
 )
 
+async def generate_memories_callback(callback_context: CallbackContext):
+    """Orchestrates memory generation by sending the session history to the Memory Bank."""
+    await callback_context.add_session_to_memory()
+    return None
+
 root_agent = Agent(
     name="twin_cities_concierage_agent",
     model=Gemini(
@@ -58,7 +65,8 @@ root_agent = Agent(
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction=persona_instruction,
-    tools=[execute_sql_tool],
+    tools=[execute_sql_tool, PreloadMemoryTool()],
+    after_agent_callback=generate_memories_callback,
 )
 
 app = App(

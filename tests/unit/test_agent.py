@@ -14,6 +14,7 @@
 
 from app.agent import root_agent, app
 from app.tools import execute_sql_tool
+from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 
 def test_agent_config():
     """Verify that the agent is initialized with correct instructions and tools."""
@@ -22,9 +23,11 @@ def test_agent_config():
     assert "jazz" in root_agent.instruction.lower()
     assert "coffee" in root_agent.instruction.lower()
     
-    # Check that MCP toolset is registered
+    # Check that both tools are registered
     assert execute_sql_tool in root_agent.tools
-    assert len(root_agent.tools) == 1
+    assert any(isinstance(t, PreloadMemoryTool) for t in root_agent.tools)
+    assert len(root_agent.tools) == 2
+    assert root_agent.after_agent_callback is not None
 
 def test_app_config():
     """Verify that the App correctly registers the root agent."""
