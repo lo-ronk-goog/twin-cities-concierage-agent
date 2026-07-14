@@ -51,16 +51,6 @@ persona_instruction = (
     "Always invoke the tool `execute_sql_readonly` directly as a standard model tool call."
 )
 
-def clean_tools_callback(callback_context, llm_request) -> None:
-    """Strips out platform-injected Code Execution (Python interpreter) tools."""
-    if llm_request.config and llm_request.config.tools:
-        filtered_tools = []
-        for tool in llm_request.config.tools:
-            if hasattr(tool, "code_execution") and tool.code_execution:
-                continue
-            filtered_tools.append(tool)
-        llm_request.config.tools = filtered_tools
-
 root_agent = Agent(
     name="twin_cities_concierage_agent",
     model=Gemini(
@@ -69,15 +59,6 @@ root_agent = Agent(
     ),
     instruction=persona_instruction,
     tools=[bigquery_mcp_toolset],
-    before_model_callback=clean_tools_callback,
-    generate_content_config=types.GenerateContentConfig(
-        tool_config=types.ToolConfig(
-            function_calling_config=types.FunctionCallingConfig(
-                mode="AUTO",
-                allowed_function_names=["execute_sql_readonly"]
-            )
-        )
-    ),
 )
 
 app = App(
