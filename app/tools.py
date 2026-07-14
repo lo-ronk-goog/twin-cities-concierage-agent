@@ -24,7 +24,7 @@ try:
 except Exception:
     project_id = "lpr-gemini-enterprise-1"
 
-location = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
+location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
 
 # Check if running inside pytest or a local test environment
 import sys
