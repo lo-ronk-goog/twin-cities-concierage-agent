@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from app.agent import root_agent, app
-from app.tools import bigquery_mcp_toolset
+from app.tools import execute_sql_tool
 
 def test_agent_config():
     """Verify that the agent is initialized with correct instructions and tools."""
@@ -23,7 +23,7 @@ def test_agent_config():
     assert "coffee" in root_agent.instruction.lower()
     
     # Check that MCP toolset is registered
-    assert bigquery_mcp_toolset in root_agent.tools
+    assert execute_sql_tool in root_agent.tools
     assert len(root_agent.tools) == 1
 
 def test_app_config():

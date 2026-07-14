@@ -20,7 +20,7 @@ from google.adk.apps import App
 from google.adk.models import Gemini
 from google.genai import types
 
-from app.tools import bigquery_mcp_toolset
+from app.tools import execute_sql_tool
 
 # CI test comment: testing DevOps pipeline execution with pinned agents-cli
 try:
@@ -58,7 +58,7 @@ root_agent = Agent(
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction=persona_instruction,
-    tools=[bigquery_mcp_toolset],
+    tools=[execute_sql_tool],
 )
 
 app = App(

@@ -14,47 +14,65 @@
 
 import os
 import logging
-from google.adk.tools.base_toolset import BaseToolset
+import requests
+import google.auth
+import google.auth.transport.requests
+from google.adk.tools import FunctionTool
 
 logger = logging.getLogger("app.tools")
 
-class LazyRegistryToolset(BaseToolset):
-    """Lazily loads the Agent Registry MCP toolset at runtime to avoid import-time API calls."""
-    def __init__(self, mcp_server_name: str):
-        super().__init__()
-        self.mcp_server_name = mcp_server_name
-        self._toolset = None
+def execute_sql_readonly(query: str) -> str:
+    """Execute a read-only SELECT SQL query on the BigQuery database to retrieve venue, event, and hours information.
+    
+    Args:
+        query: The read-only SELECT SQL query to execute.
+    """
+    # Resolve project ID
+    try:
+        _, project = google.auth.default()
+    except Exception:
+        project = "lpr-gemini-enterprise-1"
+        
+    if not project:
+        project = "lpr-gemini-enterprise-1"
 
-    def get_tools(self, context=None):
-        if self._toolset is None:
-            from google.adk.integrations.agent_registry import AgentRegistry
-            import google.auth
-            
-            try:
-                _, project_id = google.auth.default()
-            except Exception:
-                project_id = "lpr-gemini-enterprise-1"
-                
-            location = os.environ.get("GOOGLE_CLOUD_REGION", "us-central1")
-            logger.info(f"Lazily loading Agent Registry MCP server '{self.mcp_server_name}' in region '{location}'...")
-            
-            try:
-                registry = AgentRegistry(project_id=project_id, location=location)
-                toolset = registry.get_mcp_toolset(self.mcp_server_name)
-                # Remove prefix so tools map exactly as execute_sql_readonly
-                toolset.tool_name_prefix = ""
-                self._toolset = toolset
-            except Exception as registry_err:
-                logger.error(
-                    f"CRITICAL: Failed to load remote Agent Registry toolset '{self.mcp_server_name}' "
-                    f"in project '{project_id}' and region '{location}': {registry_err}",
-                    exc_info=True
-                )
-                raise registry_err
-            
-        return self._toolset.get_tools(context)
+    # Acquire and refresh Google Cloud credentials for the HTTP request
+    try:
+        credentials, _ = google.auth.default()
+        auth_request = google.auth.transport.requests.Request()
+        credentials.refresh(auth_request)
+        token = credentials.token
+    except Exception as auth_err:
+        logger.error(f"Authentication error in execute_sql_readonly: {auth_err}", exc_info=True)
+        return f"Authentication error: {auth_err}"
 
-# Initialize the lazy toolset wrapping our Google-managed remote BigQuery MCP server
-bigquery_mcp_toolset = LazyRegistryToolset(
-    "projects/lpr-gemini-enterprise-1/locations/global/mcpServers/agentregistry-00000000-0000-0000-eb30-f0665e1792d1"
-)
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+        "x-goog-user-project": project
+    }
+
+    url = "https://bigquery.googleapis.com/mcp"
+    payload = {
+        "jsonrpc": "2.0",
+        "method": "tools/call",
+        "params": {
+            "name": "execute_sql_readonly",
+            "arguments": {
+                "project_id": project,
+                "query": query
+            }
+        },
+        "id": 1
+    }
+    
+    try:
+        logger.info(f"Calling BigQuery MCP endpoint for query: {query}")
+        response = requests.post(url, headers=headers, json=payload)
+        return response.text
+    except Exception as e:
+        logger.error(f"Error calling BigQuery MCP: {e}", exc_info=True)
+        return f"Error calling MCP: {e}"
+
+# Register the Python function as an ADK FunctionTool
+execute_sql_tool = FunctionTool(execute_sql_readonly)
