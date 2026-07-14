@@ -35,14 +35,22 @@ class LazyRegistryToolset(BaseToolset):
             except Exception:
                 project_id = "lpr-gemini-enterprise-1"
                 
-            location = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+            location = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
             logger.info(f"Lazily loading Agent Registry MCP server '{self.mcp_server_name}' in region '{location}'...")
             
-            registry = AgentRegistry(project_id=project_id, location=location)
-            toolset = registry.get_mcp_toolset(self.mcp_server_name)
-            # Remove prefix so tools map exactly as execute_sql_readonly
-            toolset.tool_name_prefix = ""
-            self._toolset = toolset
+            try:
+                registry = AgentRegistry(project_id=project_id, location=location)
+                toolset = registry.get_mcp_toolset(self.mcp_server_name)
+                # Remove prefix so tools map exactly as execute_sql_readonly
+                toolset.tool_name_prefix = ""
+                self._toolset = toolset
+            except Exception as registry_err:
+                logger.error(
+                    f"CRITICAL: Failed to load remote Agent Registry toolset '{self.mcp_server_name}' "
+                    f"in project '{project_id}' and region '{location}': {registry_err}",
+                    exc_info=True
+                )
+                raise registry_err
             
         return self._toolset.get_tools(context)
 
