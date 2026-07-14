@@ -34,6 +34,8 @@ try:
     bigquery_mcp_toolset = registry.get_mcp_toolset(
         "projects/lpr-gemini-enterprise-1/locations/global/mcpServers/agentregistry-00000000-0000-0000-eb30-f0665e1792d1"
     )
+    # Remove prefix so tools map exactly as execute_sql_readonly
+    bigquery_mcp_toolset.tool_name_prefix = ""
 except Exception as e:
     logger.warning(f"Failed to load remote MCP Toolset: {e}. Falling back to empty stub for test compilation.")
     # Fallback to local stub to allow offline tests to compile and import without credentials
