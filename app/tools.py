@@ -35,7 +35,7 @@ class LazyRegistryToolset(BaseToolset):
             except Exception:
                 project_id = "lpr-gemini-enterprise-1"
                 
-            location = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
+            location = os.environ.get("GOOGLE_CLOUD_REGION", "us-central1")
             logger.info(f"Lazily loading Agent Registry MCP server '{self.mcp_server_name}' in region '{location}'...")
             
             try:
