@@ -64,7 +64,7 @@ def clean_tools_callback(callback_context, llm_request) -> None:
 root_agent = Agent(
     name="twin_cities_concierage_agent",
     model=Gemini(
-        model="gemini-2.5-flash",
+        model="gemini-2.0-flash",
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction=persona_instruction,
