@@ -59,6 +59,14 @@ root_agent = Agent(
     ),
     instruction=persona_instruction,
     tools=[bigquery_mcp_toolset],
+    generate_content_config=types.GenerateContentConfig(
+        tool_config=types.ToolConfig(
+            function_calling_config=types.FunctionCallingConfig(
+                mode="AUTO",
+                allowed_function_names=["execute_sql_readonly"]
+            )
+        )
+    ),
 )
 
 app = App(
