@@ -26,6 +26,10 @@ except Exception:
 
 location = os.environ.get("GOOGLE_CLOUD_LOCATION", "global")
 
+# Check if running inside pytest or a local test environment
+import sys
+IS_TEST = "pytest" in sys.modules or os.environ.get("INTEGRATION_TEST") == "TRUE"
+
 try:
     # Initialize the AgentRegistry
     registry = AgentRegistry(project_id=project_id, location=location)
@@ -37,6 +41,8 @@ try:
     # Remove prefix so tools map exactly as execute_sql_readonly
     bigquery_mcp_toolset.tool_name_prefix = ""
 except Exception as e:
+    if not IS_TEST:
+        raise e
     logger.warning(f"Failed to load remote MCP Toolset: {e}. Falling back to empty stub for test compilation.")
     # Fallback to local stub to allow offline tests to compile and import without credentials
     import sys
