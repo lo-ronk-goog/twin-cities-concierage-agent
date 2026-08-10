@@ -55,10 +55,26 @@ class AgentEngineApp(A2aAgent):
 
         def create_runner() -> Runner:
             """Create a Runner for the AgentEngineApp."""
+            # Lazily instantiate services to prevent cloudpickle serialization failures
+            bucket_name = os.environ.get("LOGS_BUCKET_NAME")
+            resolved_artifact_service = (
+                artifact_service
+                if artifact_service is not None
+                else (
+                    GcsArtifactService(bucket_name=bucket_name)
+                    if bucket_name
+                    else InMemoryArtifactService()
+                )
+            )
+            resolved_session_service = (
+                session_service
+                if session_service is not None
+                else InMemorySessionService()
+            )
             return Runner(
                 app=app,
-                session_service=session_service,
-                artifact_service=artifact_service,
+                session_service=resolved_session_service,
+                artifact_service=resolved_artifact_service,
             )
 
         # Build agent card in an async context if needed
@@ -141,10 +157,4 @@ gemini_location = os.environ.get("GOOGLE_CLOUD_LOCATION")
 logs_bucket_name = os.environ.get("LOGS_BUCKET_NAME")
 agent_runtime = AgentEngineApp.create(
     app=adk_app,
-    artifact_service=(
-        GcsArtifactService(bucket_name=logs_bucket_name)
-        if logs_bucket_name
-        else InMemoryArtifactService()
-    ),
-    session_service=InMemorySessionService(),
 )
