@@ -28,6 +28,6 @@ class Feedback(BaseModel):
     score: int | float
     text: str | None = ""
     log_type: Literal["feedback"] = "feedback"
-    service_name: Literal["twin-cities-concierage-agent"] = "twin-cities-concierage-agent"
+    service_name: Literal["twin-cities-concierge-agent"] = "twin-cities-concierge-agent"
     user_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     session_id: str = Field(default_factory=lambda: str(uuid.uuid4()))

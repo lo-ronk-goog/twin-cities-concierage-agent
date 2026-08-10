@@ -24,15 +24,21 @@ from app.tools import execute_sql_tool
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 from google.adk.agents.callback_context import CallbackContext
 
-# CI test comment: testing DevOps pipeline execution with pinned agents-cli
+# CI/CD Trigger: Testing merge path and validation pipeline run.
 try:
     _, default_project_id = google.auth.default()
 except Exception:
     default_project_id = "lpr-gemini-enterprise-1"
 
-project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", default_project_id)
+project_id = (
+    os.environ.get("GOOGLE_CLOUD_PROJECT")
+    or default_project_id
+    or "lpr-gemini-enterprise-1"
+)
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ.get("GOOGLE_CLOUD_LOCATION", "us-central1")
+os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ.get(
+    "GOOGLE_CLOUD_LOCATION", "us-central1"
+)
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
 persona_instruction = (
@@ -53,13 +59,15 @@ persona_instruction = (
     "Always invoke the tool `execute_sql_readonly` directly as a standard model tool call."
 )
 
+
 async def generate_memories_callback(callback_context: CallbackContext):
     """Orchestrates memory generation by sending the session history to the Memory Bank."""
     await callback_context.add_session_to_memory()
     return None
 
+
 root_agent = Agent(
-    name="twin_cities_concierage_agent",
+    name="twin_cities_concierge_agent",
     model=Gemini(
         model="gemini-2.5-flash",
         retry_options=types.HttpRetryOptions(attempts=3),
@@ -73,4 +81,3 @@ app = App(
     root_agent=root_agent,
     name="app",
 )
-

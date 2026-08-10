@@ -3247,7 +3247,7 @@ wheels = [
 ]
 
 [[package]]
-name = "twin-cities-concierage-agent"
+name = "twin-cities-concierge-agent"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

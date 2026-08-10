@@ -20,19 +20,19 @@ COMMAND=$1
 case "$COMMAND" in
   test)
     echo "========================================="
-    echo "🚀 Running twin-cities-concierage-agent evaluations..."
+    echo "🚀 Running twin-cities-concierge-agent evaluations..."
     echo "========================================="
     agents-cli eval run
     ;;
   deploy)
     STAGE=${2:-production}
     if [ "$STAGE" = "staging" ]; then
-      DISPLAY_NAME="Twin Cities Concierage Agent (Staging)"
+      DISPLAY_NAME="Twin Cities Concierge Agent (Staging)"
       echo "========================================="
       echo "🚀 Deploying to Staging..."
       echo "========================================="
     else
-      DISPLAY_NAME="Twin Cities Concierage Agent"
+      DISPLAY_NAME="Twin Cities Concierge Agent"
       echo "========================================="
       echo "🚀 Deploying to Production..."
       echo "========================================="

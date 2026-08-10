@@ -1,5 +1,5 @@
 [project]
-name = "twin-cities-concierage-agent"
+name = "twin-cities-concierge-agent"
 version = "0.1.0"
 description = ""
 authors = [
@@ -98,6 +98,7 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 pythonpath = "."
 asyncio_default_fixture_loop_scope = "function"
+addopts = "--ignore=tests/load_test"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app","frontend"]
@@ -105,7 +106,7 @@ packages = ["app","frontend"]
 [tool.agents-cli]
 # Generation metadata - enables CLI commands to understand project context
 # These fields allow any generated project to work as a remote template
-name = "twin-cities-concierage-agent"
+name = "twin-cities-concierge-agent"
 description = "Simple ReAct agent"
 base_template = "adk"
 agent_directory = "app"
@@ -120,6 +121,7 @@ deployment_target = "agent_runtime"
 session_type = "none"
 cicd_runner = "github_actions"
 include_data_ingestion = false
+is_a2a = true
 
 datastore = "none"
 
