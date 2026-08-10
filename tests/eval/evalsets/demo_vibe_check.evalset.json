@@ -1,0 +1,64 @@
+{
+  "eval_set_id": "demo_vibe_check",
+  "name": "Twin Cities Concierge Demo Vibe Check",
+  "description": "Evaluation set designed to test core local expertise, coffee and jazz database precision, and itinerary synthesis.",
+  "eval_cases": [
+    {
+      "eval_id": "minneapolis_day_to_night",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "I want to spend a Saturday in Minneapolis. Can you recommend a cozy coffee shop for the morning, and a live jazz club to visit that night? Tell me what music style they play."
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "demo_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "st_paul_cozy_coffee",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "Are there any good coffee shops over in St. Paul? I'm looking for a quiet spot to read for a few hours."
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "demo_user",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "jazz_schedule_check",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "Is there any live jazz happening this Friday night? I'd love to see a band play swing or bebop."
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "demo_user",
+        "state": {}
+      }
+    }
+  ]
+}
