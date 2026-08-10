@@ -121,7 +121,7 @@ deployment_target = "agent_runtime"
 session_type = "none"
 cicd_runner = "github_actions"
 include_data_ingestion = false
-is_a2a = true
+is_a2a = false
 
 datastore = "none"
 
