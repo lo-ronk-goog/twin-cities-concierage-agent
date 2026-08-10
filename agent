@@ -20,18 +20,34 @@ COMMAND=$1
 case "$COMMAND" in
   test)
     echo "========================================="
-    echo "🚀 Running msp-vibe-director evaluations..."
+    echo "🚀 Running twin-cities-concierge-agent evaluations..."
     echo "========================================="
     agents-cli eval run
     ;;
   deploy)
-    echo "========================================="
-    echo "🚀 Deploying msp-vibe-director to Agent Engine (Production)..."
-    echo "========================================="
-    agents-cli deploy \
-      --project lpr-gemini-enterprise-1 \
-      --region us-east1 \
-      --no-confirm-project
+    STAGE=${2:-production}
+    if [ "$STAGE" = "staging" ]; then
+      DISPLAY_NAME="Twin Cities Concierge Agent (Staging)"
+      echo "========================================="
+      echo "🚀 Deploying to Staging..."
+      echo "========================================="
+    else
+      DISPLAY_NAME="Twin Cities Concierge Agent"
+      echo "========================================="
+      echo "🚀 Deploying to Production..."
+      echo "========================================="
+    fi
+    uv run --with google-agents-cli==0.1.3 python -c "
+from google.agents.cli._project import read_project_config
+from google.agents.cli.deploy.agent_runtime import deploy_agent_runtime
+cfg = read_project_config()
+deploy_agent_runtime(
+    cfg=cfg,
+    project='lpr-gemini-enterprise-1',
+    location='us-central1',
+    display_name='$DISPLAY_NAME',
+)
+"
     ;;
   *)
     echo "Usage: ./agent {test|deploy}"

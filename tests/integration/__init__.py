@@ -1,0 +1,1 @@
+# Isolate integration tests namespace

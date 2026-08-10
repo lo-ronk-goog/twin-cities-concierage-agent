@@ -12,19 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from app.agent import root_agent, app
-from app.tools import bigquery_mcp_toolset
+from google.adk.tools.preload_memory_tool import PreloadMemoryTool
+
+from app.agent import app, root_agent
+from app.tools import execute_sql_tool
+
 
 def test_agent_config():
     """Verify that the agent is initialized with correct instructions and tools."""
-    assert root_agent.name == "msp_vibe_director"
+    assert root_agent.name == "twin_cities_concierge_agent"
     assert "concierge" in root_agent.instruction.lower()
     assert "jazz" in root_agent.instruction.lower()
     assert "coffee" in root_agent.instruction.lower()
-    
-    # Check that MCP toolset is registered
-    assert bigquery_mcp_toolset in root_agent.tools
-    assert len(root_agent.tools) == 1
+
+    # Check that both tools are registered
+    assert execute_sql_tool in root_agent.tools
+    assert any(isinstance(t, PreloadMemoryTool) for t in root_agent.tools)
+    assert len(root_agent.tools) == 2
+    assert root_agent.after_agent_callback is not None
+
 
 def test_app_config():
     """Verify that the App correctly registers the root agent."""
