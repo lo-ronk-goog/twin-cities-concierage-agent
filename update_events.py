@@ -13,13 +13,10 @@
 # limitations under the License.
 
 import logging
-
-from google.auth.exceptions import RefreshError
 from google.cloud import bigquery
+from google.auth.exceptions import RefreshError
 
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
 PROJECT_ID = "lpr-gemini-enterprise-1"
@@ -34,10 +31,10 @@ def shift_event_dates():
 
     sql_query = f"""
     DECLARE max_date DATE;
-    SET max_date = (SELECT MAX(event_date) FROM `{FULL_TABLE_ID}`);
+    SET max_date = (SELECT MAX(PARSE_DATE('%Y-%B-%d', event_date)) FROM `{FULL_TABLE_ID}`);
 
     UPDATE `{FULL_TABLE_ID}`
-    SET event_date = DATE_ADD(event_date, INTERVAL DATE_DIFF(DATE('2026-08-16'), max_date, DAY) DAY)
+    SET event_date = FORMAT_DATE('%Y-%B-%d', DATE_ADD(PARSE_DATE('%Y-%B-%d', event_date), INTERVAL DATE_DIFF(DATE('2026-08-16'), max_date, DAY) DAY))
     WHERE TRUE;
     """
 
@@ -46,9 +43,7 @@ def shift_event_dates():
         query_job = client.query(sql_query)
         # Wait for the query to complete
         query_job.result()
-        logger.info(
-            "Successfully shifted all event dates to current week (August 10 - August 16, 2026)!"
-        )
+        logger.info("Successfully shifted all event dates to current week (August 10 - August 16, 2026)!")
     except RefreshError:
         logger.error(
             "Google Cloud credentials expired or missing. Please run:\n"
