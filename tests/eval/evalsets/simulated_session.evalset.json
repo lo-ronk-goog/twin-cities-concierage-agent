@@ -1,0 +1,81 @@
+{
+  "eval_set_id": "simulated_session",
+  "name": "Twin Cities Concierge Simulated Session Experiment",
+  "description": "Evaluation set designed to simulate a complete multi-turn session with the user, testing contextual memory and sequential database queries.",
+  "eval_cases": [
+    {
+      "eval_id": "minneapolis_thursday_itinerary",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "Hi! I'm planning a day out in Minneapolis this Thursday, August 13th, 2026. Can you recommend a nice local coffee shop to start my morning?"
+              }
+            ]
+          }
+        },
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "That sounds great! After coffee, I'd love to see some live music later that night. Are there any events scheduled at local bars or jazz clubs on Thursday?"
+              }
+            ]
+          }
+        },
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "Awesome. What are the operating hours for that music venue, and does it fit my evening schedule?"
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "simulated_user_1",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "st_paul_friday_date_night",
+      "conversation": [
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "I'm planning a Friday date night in St. Paul on August 14th, 2026. What's a cozy coffee shop we can stop by first?"
+              }
+            ]
+          }
+        },
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "Perfect. We want to catch some live jazz or acoustic music afterwards. Are there any events in St. Paul that evening?"
+              }
+            ]
+          }
+        },
+        {
+          "user_content": {
+            "parts": [
+              {
+                "text": "That sounds lovely! What time does the event start, and what is the vibe of that venue?"
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "app",
+        "user_id": "simulated_user_2",
+        "state": {}
+      }
+    }
+  ]
+}
