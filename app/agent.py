@@ -24,7 +24,7 @@ from app.tools import execute_sql_tool
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 from google.adk.agents.callback_context import CallbackContext
 
-# CI test comment: testing DevOps pipeline execution with pinned agents-cli
+# CI/CD Trigger: Testing merge path and validation pipeline run.
 try:
     _, default_project_id = google.auth.default()
 except Exception:
