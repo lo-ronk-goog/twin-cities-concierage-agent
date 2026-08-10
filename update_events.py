@@ -13,10 +13,13 @@
 # limitations under the License.
 
 import logging
-from google.cloud import bigquery
-from google.auth.exceptions import RefreshError
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+from google.auth.exceptions import RefreshError
+from google.cloud import bigquery
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 logger = logging.getLogger(__name__)
 
 PROJECT_ID = "lpr-gemini-enterprise-1"
@@ -43,7 +46,9 @@ def shift_event_dates():
         query_job = client.query(sql_query)
         # Wait for the query to complete
         query_job.result()
-        logger.info("Successfully shifted all event dates to current week (August 10 - August 16, 2026)!")
+        logger.info(
+            "Successfully shifted all event dates to current week (August 10 - August 16, 2026)!"
+        )
     except RefreshError:
         logger.error(
             "Google Cloud credentials expired or missing. Please run:\n"

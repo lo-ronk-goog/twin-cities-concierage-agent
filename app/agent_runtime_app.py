@@ -101,7 +101,18 @@ class AgentEngineApp(A2aAgent):
 
     def set_up(self) -> None:
         """Initialize the agent engine app with logging and telemetry."""
-        vertexai.init()
+        # Resolve project and location explicitly to prevent server-side initialization failures
+        project_id = os.environ.get("GOOGLE_CLOUD_PROJECT") or "lpr-gemini-enterprise-1"
+        location = (
+            os.environ.get("GOOGLE_CLOUD_LOCATION")
+            or os.environ.get("GOOGLE_CLOUD_REGION")
+            or "us-central1"
+        )
+
+        self._tmpl_attrs["project"] = project_id
+        self._tmpl_attrs["location"] = location
+
+        vertexai.init(project=project_id, location=location)
         setup_telemetry()
         super().set_up()
         logging.basicConfig(level=logging.INFO)
