@@ -12,122 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import asyncio
 import logging
 import os
 from typing import Any
 
-import nest_asyncio
 import vertexai
-from a2a.types import AgentCapabilities, AgentCard, AgentExtension, TransportProtocol
 from dotenv import load_dotenv
-from google.adk.a2a.executor.a2a_agent_executor import A2aAgentExecutor
-from google.adk.a2a.utils.agent_card_builder import AgentCardBuilder
-from google.adk.apps import App
 from google.adk.artifacts import GcsArtifactService, InMemoryArtifactService
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
 from google.cloud import logging as google_cloud_logging
-from vertexai.preview.reasoning_engines import A2aAgent
+from vertexai.agent_engines.templates.adk import AdkApp
 
 from app.agent import app as adk_app
 from app.app_utils.telemetry import setup_telemetry
 from app.app_utils.typing import Feedback
 
-# Load environment variables from .env file at runtime
 load_dotenv()
 
 
-class AgentEngineApp(A2aAgent):
-    @staticmethod
-    def create(
-        app: App | None = None,
-        artifact_service: Any = None,
-        session_service: Any = None,
-    ) -> Any:
-        """Create an AgentEngineApp instance.
-
-        This method detects whether it's being called in an async context (like notebooks
-        or Agent Runtime) and handles agent card creation appropriately.
-        """
-        if app is None:
-            app = adk_app
-
-        def create_runner() -> Runner:
-            """Create a Runner for the AgentEngineApp."""
-            # Lazily instantiate services to prevent cloudpickle serialization failures
-            bucket_name = os.environ.get("LOGS_BUCKET_NAME")
-            resolved_artifact_service = (
-                artifact_service
-                if artifact_service is not None
-                else (
-                    GcsArtifactService(bucket_name=bucket_name)
-                    if bucket_name
-                    else InMemoryArtifactService()
-                )
-            )
-            resolved_session_service = (
-                session_service
-                if session_service is not None
-                else InMemorySessionService()
-            )
-            return Runner(
-                app=app,
-                session_service=resolved_session_service,
-                artifact_service=resolved_artifact_service,
-            )
-
-        # Build agent card in an async context if needed
-        try:
-            asyncio.get_running_loop()
-            # Running event loop detected - enable nested asyncio.run()
-            nest_asyncio.apply()
-        except RuntimeError:
-            pass
-
-        agent_card = asyncio.run(AgentEngineApp.build_agent_card(app=app))
-
-        return AgentEngineApp(
-            agent_executor_builder=lambda: A2aAgentExecutor(runner=create_runner()),
-            agent_card=agent_card,
-        )
-
-    @staticmethod
-    async def build_agent_card(app: App) -> AgentCard:
-        """Builds the Agent Card dynamically from the app."""
-        agent_card_builder = AgentCardBuilder(
-            agent=app.root_agent,
-            # Agent Runtime does not support streaming yet
-            capabilities=AgentCapabilities(
-                streaming=False,
-                extensions=[
-                    AgentExtension(
-                        uri="https://google.github.io/adk-docs/a2a/a2a-extension/",
-                        description="Ability to use the new agent executor implementation",
-                    ),
-                ],
-            ),
-            rpc_url="http://localhost:9999/",
-            agent_version=os.getenv("AGENT_VERSION", "0.1.0"),
-        )
-        agent_card = await agent_card_builder.build()
-        agent_card.preferred_transport = TransportProtocol.http_json  # Http Only.
-        agent_card.supports_authenticated_extended_card = True
-        return agent_card
-
+class AgentEngineApp(AdkApp):
     def set_up(self) -> None:
         """Initialize the agent engine app with logging and telemetry."""
-        # Resolve project and location explicitly to prevent server-side initialization failures
         project_id = os.environ.get("GOOGLE_CLOUD_PROJECT") or "lpr-gemini-enterprise-1"
         location = (
             os.environ.get("GOOGLE_CLOUD_LOCATION")
             or os.environ.get("GOOGLE_CLOUD_REGION")
             or "us-central1"
         )
-
-        self._tmpl_attrs["project"] = project_id
-        self._tmpl_attrs["location"] = location
-
         vertexai.init(project=project_id, location=location)
         setup_telemetry()
         super().set_up()
@@ -148,13 +58,14 @@ class AgentEngineApp(A2aAgent):
         operations[""] = [*operations.get("", []), "register_feedback"]
         return operations
 
-    def clone(self) -> "AgentEngineApp":
-        """Returns a clone of the Agent Runtime application."""
-        return self
-
 
 gemini_location = os.environ.get("GOOGLE_CLOUD_LOCATION")
 logs_bucket_name = os.environ.get("LOGS_BUCKET_NAME")
-agent_runtime = AgentEngineApp.create(
+agent_runtime = AgentEngineApp(
     app=adk_app,
+    artifact_service_builder=lambda: (
+        GcsArtifactService(bucket_name=logs_bucket_name)
+        if logs_bucket_name
+        else InMemoryArtifactService()
+    ),
 )
