@@ -54,9 +54,8 @@ service_account = env_config.get('service_account')
 if gateway_name:
     original_create_config = vertexai._genai.agent_engines.AgentEngines._create_config
     def patched_create_config(self, *args, **kwargs):
-        has_agent = kwargs.get('agent') is not None or (len(args) > 0 and args[0] is not None)
-        has_source = has_agent or any(k in kwargs for k in ('source_packages', 'developer_connect_source', 'agent_config_source'))
-        if has_source:
+        is_identity_creation = isinstance(kwargs.get('config'), dict) and kwargs['config'].get('identity_type') == 'AGENT_IDENTITY'
+        if not is_identity_creation:
             kwargs['agent_gateway_config'] = {
                 'client_to_agent_config': {
                     'agent_gateway': f'projects/lpr-gemini-enterprise-1/locations/us-central1/agentGateways/{gateway_name}'
