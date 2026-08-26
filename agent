@@ -54,7 +54,10 @@ service_account = env_config.get('service_account')
 if gateway_name:
     original_create_config = vertexai._genai.agent_engines.AgentEngines._create_config
     def patched_create_config(self, *args, **kwargs):
-        is_identity_creation = isinstance(kwargs.get('config'), dict) and kwargs['config'].get('identity_type') == 'AGENT_IDENTITY'
+        config_val = kwargs.get('config')
+        if config_val is None and len(args) > 2:
+            config_val = args[2]
+        is_identity_creation = isinstance(config_val, dict) and config_val.get('identity_type') == 'AGENT_IDENTITY'
         if not is_identity_creation:
             kwargs['agent_gateway_config'] = {
                 'client_to_agent_config': {
