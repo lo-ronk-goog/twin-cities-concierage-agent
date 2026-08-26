@@ -9,9 +9,9 @@ environments:
     project_id: lpr-gemini-enterprise-1
     service_account: app-sa-staging@lpr-gemini-enterprise-1.iam.gserviceaccount.com
     logs_bucket: twin-cities-concierge-agent-logs-staging
-    agent_gateway: twin-cities-concierge-agent-gateway-v2
+    agent_gateway: twin-cities-concierge-agent-gateway-v5
   prod:
     project_id: lpr-gemini-enterprise-1
     service_account: app-sa-prod@lpr-gemini-enterprise-1.iam.gserviceaccount.com
     logs_bucket: twin-cities-concierge-agent-logs-prod
-    agent_gateway: twin-cities-concierge-agent-gateway-v2
+    agent_gateway: twin-cities-concierge-agent-gateway-v5
