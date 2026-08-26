@@ -23,13 +23,13 @@ def main():
     if gateway_name:
         original_create_config = vertexai._genai.agent_engines.AgentEngines._create_config
         def patched_create_config(self, *args, **kwargs):
-            config_val = kwargs.get('config')
-            if config_val is None and len(args) > 2:
-                config_val = args[2]
+            # Extract the agent parameter from args or kwargs to distinguish between
+            # placeholder identity creation (agent=None) and actual code deployment (agent!=None)
+            agent_val = kwargs.get('agent')
+            if agent_val is None and len(args) > 1:
+                agent_val = args[1]
             
-            is_identity_creation = isinstance(config_val, dict) and config_val.get('identity_type') == 'AGENT_IDENTITY'
-            
-            if not is_identity_creation:
+            if agent_val is not None:
                 kwargs['agent_gateway_config'] = {
                     'client_to_agent_config': {
                         'agent_gateway': f'projects/lpr-gemini-enterprise-1/locations/us-central1/agentGateways/{gateway_name}'
