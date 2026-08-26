@@ -44,7 +44,8 @@ def main():
         project='lpr-gemini-enterprise-1',
         location='us-central1',
         display_name=display_name,
-        service_account=service_account,
+        # Vertex AI Agent Identity forbids setting spec.service_account
+        service_account=None if gateway_name else service_account,
         agent_identity=True,
     )
 
