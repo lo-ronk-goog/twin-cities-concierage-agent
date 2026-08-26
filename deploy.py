@@ -23,13 +23,15 @@ def main():
     if gateway_name:
         original_create_config = vertexai._genai.agent_engines.AgentEngines._create_config
         def patched_create_config(self, *args, **kwargs):
-            # Extract the agent parameter from args or kwargs to distinguish between
-            # placeholder identity creation (agent=None) and actual code deployment (agent!=None)
-            agent_val = kwargs.get('agent')
-            if agent_val is None and len(args) > 1:
-                agent_val = args[1]
+            # Check if this is the actual deployment phase by checking for compiled packages or agent code
+            has_source = kwargs.get('agent') is not None or kwargs.get('source_packages') is not None
+            if not has_source:
+                if len(args) > 1 and args[1] is not None:
+                    has_source = True
+                elif len(args) > 22 and args[22] is not None:
+                    has_source = True
             
-            if agent_val is not None:
+            if has_source:
                 kwargs['agent_gateway_config'] = {
                     'client_to_agent_config': {
                         'agent_gateway': f'projects/lpr-gemini-enterprise-1/locations/us-central1/agentGateways/{gateway_name}'
@@ -44,7 +46,6 @@ def main():
         project='lpr-gemini-enterprise-1',
         location='us-central1',
         display_name=display_name,
-        # Vertex AI Agent Identity forbids setting spec.service_account
         service_account=None if gateway_name else service_account,
         agent_identity=True,
     )
