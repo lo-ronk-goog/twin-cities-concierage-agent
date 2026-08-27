@@ -37,17 +37,7 @@ case "$COMMAND" in
       echo "🚀 Deploying to Production..."
       echo "========================================="
     fi
-    uv run --with google-agents-cli==0.1.3 python -c "
-from google.agents.cli._project import read_project_config
-from google.agents.cli.deploy.agent_runtime import deploy_agent_runtime
-cfg = read_project_config()
-deploy_agent_runtime(
-    cfg=cfg,
-    project='lpr-gemini-enterprise-1',
-    location='us-central1',
-    display_name='$DISPLAY_NAME',
-)
-"
+    uv run --with pyyaml --with google-agents-cli==0.1.3 python deploy.py "$STAGE" "$DISPLAY_NAME"
     ;;
   *)
     echo "Usage: ./agent {test|deploy}"
