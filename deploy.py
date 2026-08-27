@@ -34,7 +34,8 @@ def main():
             if has_source:
                 kwargs['agent_gateway_config'] = {
                     'client_to_agent_config': {
-                        'agent_gateway': f'projects/lpr-gemini-enterprise-1/locations/us-central1/agentGateways/{gateway_name}'
+                        # Vertex AI registers internal resources under the numeric Project Number
+                        'agent_gateway': f'projects/152008061700/locations/us-central1/agentGateways/{gateway_name}'
                     }
                 }
             return original_create_config(self, *args, **kwargs)
