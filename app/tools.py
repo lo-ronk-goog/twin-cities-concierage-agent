@@ -15,9 +15,8 @@
 import logging
 
 import google.auth
-import google.auth.transport.requests
-import requests
 from google.adk.tools import FunctionTool
+from google.auth.transport.requests import AuthorizedSession
 
 logger = logging.getLogger("app.tools")
 
@@ -28,34 +27,23 @@ def execute_sql_readonly(query: str) -> str:
     Args:
         query: The read-only SELECT SQL query to execute.
     """
-    # Resolve project ID
+    # Resolve project ID and credentials with cloud-platform scope
     try:
-        _, project = google.auth.default()
+        credentials, project = google.auth.default(
+            scopes=["https://www.googleapis.com/auth/cloud-platform"]
+        )
     except Exception:
+        credentials = None
         project = "lpr-gemini-enterprise-1"
 
     if not project:
         project = "lpr-gemini-enterprise-1"
 
-    # Acquire and refresh Google Cloud credentials for the HTTP request
-    try:
-        credentials, _ = google.auth.default()
-        auth_request = google.auth.transport.requests.Request()
-        credentials.refresh(auth_request)
-        token = credentials.token
-    except Exception as auth_err:
-        logger.error(
-            f"Authentication error in execute_sql_readonly: {auth_err}", exc_info=True
-        )
-        return f"Authentication error: {auth_err}"
-
+    url = "https://bigquery.googleapis.com/mcp"
     headers = {
-        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
         "x-goog-user-project": project,
     }
-
-    url = "https://bigquery.googleapis.com/mcp"
     payload = {
         "jsonrpc": "2.0",
         "method": "tools/call",
@@ -68,7 +56,13 @@ def execute_sql_readonly(query: str) -> str:
 
     try:
         logger.info(f"Calling BigQuery MCP endpoint for query: {query}")
-        response = requests.post(url, headers=headers, json=payload)
+        session = AuthorizedSession(credentials) if credentials else None
+        if session:
+            response = session.post(url, headers=headers, json=payload)
+        else:
+            import requests
+
+            response = requests.post(url, headers=headers, json=payload)
         return response.text
     except Exception as e:
         logger.error(f"Error calling BigQuery MCP: {e}", exc_info=True)

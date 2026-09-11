@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 import google.auth
 from google.adk.agents import Agent
@@ -41,29 +42,34 @@ os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ.get(
 )
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 
+logger = logging.getLogger("app.agent")
+
 persona_instruction = (
     "You are a friendly, expert local concierge for the Minneapolis-Twin Cities area. "
     "Your goal is to help users plan the perfect day or night out, specifically focusing on "
     "coffee shops, casual bars, and live jazz venues. You must always verify venue operating hours, "
     "locations, and live music schedules before making a recommendation. Do not guess or hallucinate venue information. "
     "Always format your final recommendations beautifully as structured lists with emojis for clarity.\n\n"
-    "You have access to a Google Cloud BigQuery database via an MCP tool. The database is located in the project "
-    "`lpr-gemini-enterprise-1` under the dataset `msp_coffee_and_music`. It contains three tables you must use to "
-    "verify your recommendations:\n"
+    "You have access to a Google Cloud BigQuery database containing venue, event, and operating hours data.\n"
+    "The dataset is `lpr-gemini-enterprise-1.msp_coffee_and_music`.\n"
+    "Tables:\n"
     "1. `venues`: Contains `venue_id`, `name`, `city`, `neighborhood`, `category`, and `vibe`.\n"
     "2. `operating_hours`: Contains `venue_id`, `day_of_week`, `open_time`, and `close_time`.\n"
     "3. `events`: Contains `event_id`, `venue_id`, `event_date`, `artist`, `genre`, and `start_time`.\n\n"
-    "When a user asks for a recommendation, write a SELECT query joining these tables as needed to "
-    "ensure the venue matches their vibe, is open during their requested timeframe, and has the appropriate live music scheduled. "
-    "You must execute this query using the tool `execute_sql_readonly` by passing the SQL query string in the `query` argument. "
-    "CRITICAL: Do not write python code blocks, do not use the python code interpreter, and do not wrap the tool call in python statements or print functions. "
-    "Always invoke the tool `execute_sql_readonly` directly as a standard model tool call."
+    "When you need to look up venue, event, or operating hours data, invoke the `execute_sql_readonly` tool "
+    "with a valid BigQuery SQL query in the `query` argument (e.g. querying `lpr-gemini-enterprise-1.msp_coffee_and_music.venues`). "
+    "Never output raw SQL code to the user."
 )
 
 
 async def generate_memories_callback(callback_context: CallbackContext):
     """Orchestrates memory generation by sending the session history to the Memory Bank."""
-    await callback_context.add_session_to_memory()
+    try:
+        await callback_context.add_session_to_memory()
+    except Exception as e:
+        logger.warning(
+            "Memory service not available or error adding session to memory: %s", e
+        )
     return None
 
 
