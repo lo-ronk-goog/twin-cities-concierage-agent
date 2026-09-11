@@ -32,12 +32,39 @@ def shift_event_dates():
     logger.info("Initializing BigQuery Client...")
     client = bigquery.Client(project=PROJECT_ID)
 
+    # Automatically shifts all dates to the current week (ending this coming Sunday),
+    # preserving day-of-week alignment and storing dates in standard ISO YYYY-MM-DD format.
     sql_query = f"""
+    DECLARE target_sunday DATE;
     DECLARE max_date DATE;
-    SET max_date = (SELECT MAX(PARSE_DATE('%Y-%B-%d', event_date)) FROM `{FULL_TABLE_ID}`);
+
+    -- Target Sunday of current week (Monday=day 1 ... Sunday=day 7)
+    SET target_sunday = DATE_ADD(DATE_TRUNC(CURRENT_DATE(), WEEK(MONDAY)), INTERVAL 6 DAY);
+
+    -- Detect max date whether stored as YYYY-MM-DD or YYYY-MonthName-DD
+    SET max_date = (
+        SELECT MAX(
+            CASE
+                WHEN REGEXP_CONTAINS(event_date, r'^\\d{{4}}-\\d{{2}}-\\d{{2}}$')
+                THEN PARSE_DATE('%Y-%m-%d', event_date)
+                ELSE PARSE_DATE('%Y-%B-%d', event_date)
+            END
+        )
+        FROM `{FULL_TABLE_ID}`
+    );
 
     UPDATE `{FULL_TABLE_ID}`
-    SET event_date = FORMAT_DATE('%Y-%B-%d', DATE_ADD(PARSE_DATE('%Y-%B-%d', event_date), INTERVAL DATE_DIFF(DATE('2026-08-16'), max_date, DAY) DAY))
+    SET event_date = FORMAT_DATE(
+        '%Y-%m-%d',
+        DATE_ADD(
+            CASE
+                WHEN REGEXP_CONTAINS(event_date, r'^\\d{{4}}-\\d{{2}}-\\d{{2}}$')
+                THEN PARSE_DATE('%Y-%m-%d', event_date)
+                ELSE PARSE_DATE('%Y-%B-%d', event_date)
+            END,
+            INTERVAL DATE_DIFF(target_sunday, max_date, DAY) DAY
+        )
+    )
     WHERE TRUE;
     """
 
@@ -47,7 +74,7 @@ def shift_event_dates():
         # Wait for the query to complete
         query_job.result()
         logger.info(
-            "Successfully shifted all event dates to current week (August 10 - August 16, 2026)!"
+            "Successfully shifted all event dates to current week (YYYY-MM-DD)!"
         )
     except RefreshError:
         logger.error(

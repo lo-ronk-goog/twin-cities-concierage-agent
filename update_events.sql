@@ -1,11 +1,33 @@
 -- BigQuery SQL script to shift all event dates so that they fall inside the current week
--- Current Week: Monday, August 10, 2026 to Sunday, August 16, 2026
--- This script shifts all event dates (stored as YYYY-MonthName-DD strings) by the difference
--- between the dataset's maximum parsed date and Sunday, August 16, 2026.
+-- Dynamically targets the Sunday ending the current week (Monday=day 1 ... Sunday=day 7).
+-- Stores dates in standard ISO YYYY-MM-DD format.
 
+DECLARE target_sunday DATE;
 DECLARE max_date DATE;
-SET max_date = (SELECT MAX(PARSE_DATE('%Y-%B-%d', event_date)) FROM `lpr-gemini-enterprise-1.msp_coffee_and_music.events`);
+
+SET target_sunday = DATE_ADD(DATE_TRUNC(CURRENT_DATE(), WEEK(MONDAY)), INTERVAL 6 DAY);
+
+SET max_date = (
+    SELECT MAX(
+        CASE
+            WHEN REGEXP_CONTAINS(event_date, r'^\d{4}-\d{2}-\d{2}$')
+            THEN PARSE_DATE('%Y-%m-%d', event_date)
+            ELSE PARSE_DATE('%Y-%B-%d', event_date)
+        END
+    )
+    FROM `lpr-gemini-enterprise-1.msp_coffee_and_music.events`
+);
 
 UPDATE `lpr-gemini-enterprise-1.msp_coffee_and_music.events`
-SET event_date = FORMAT_DATE('%Y-%B-%d', DATE_ADD(PARSE_DATE('%Y-%B-%d', event_date), INTERVAL DATE_DIFF(DATE('2026-08-16'), max_date, DAY) DAY))
+SET event_date = FORMAT_DATE(
+    '%Y-%m-%d',
+    DATE_ADD(
+        CASE
+            WHEN REGEXP_CONTAINS(event_date, r'^\d{4}-\d{2}-\d{2}$')
+            THEN PARSE_DATE('%Y-%m-%d', event_date)
+            ELSE PARSE_DATE('%Y-%B-%d', event_date)
+        END,
+        INTERVAL DATE_DIFF(target_sunday, max_date, DAY) DAY
+    )
+)
 WHERE TRUE;
