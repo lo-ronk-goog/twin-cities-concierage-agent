@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 
 import google.auth
@@ -38,6 +39,22 @@ def execute_sql_readonly(query: str) -> str:
 
     if not project:
         project = "lpr-gemini-enterprise-1"
+
+    # Primary: execute directly using official google.cloud.bigquery.Client with credentials
+    try:
+        from google.cloud import bigquery
+
+        logger.info(
+            f"Executing BigQuery query directly via google.cloud.bigquery: {query}"
+        )
+        client = bigquery.Client(project=project, credentials=credentials)
+        query_job = client.query(query)
+        rows = [dict(row) for row in query_job.result()]
+        return json.dumps(rows, default=str)
+    except Exception as bq_err:
+        logger.warning(
+            "Direct BigQuery execution failed, falling back to MCP endpoint: %s", bq_err
+        )
 
     url = "https://bigquery.googleapis.com/mcp"
     headers = {
@@ -66,7 +83,7 @@ def execute_sql_readonly(query: str) -> str:
         return response.text
     except Exception as e:
         logger.error(f"Error calling BigQuery MCP: {e}", exc_info=True)
-        return f"Error calling MCP: {e}"
+        return f"Error calling BigQuery: {e}"
 
 
 # Register the Python function as an ADK FunctionTool
