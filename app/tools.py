@@ -93,3 +93,12 @@ def execute_sql_readonly(query: str) -> str:
 
 # Register the Python function as an ADK FunctionTool
 execute_sql_tool = FunctionTool(execute_sql_readonly)
+
+
+def query_brunch_specials(query: str, project: str = "lpr-gemini-enterprise-1") -> str:
+    """Specialized MCP helper tool to query brunch menus and weekend specials."""
+    from google.cloud import bigquery
+    client = bigquery.Client(project=project)
+    query_job = client.query(query)
+    return str([dict(row) for row in query_job.result()])
+
