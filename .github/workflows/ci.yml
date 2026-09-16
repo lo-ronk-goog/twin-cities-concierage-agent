@@ -67,7 +67,13 @@ jobs:
 
       - name: CodeMender Security Gate (Review & HITL Prep)
         run: |
-          python3 scripts/codemender.py find --format=markdown
+          if [ "${{ github.ref }}" = "refs/heads/main" ] || [ "${{ github.base_ref }}" = "main" ]; then
+            echo "🔒 Strict Blocking Gate Active: Fail on findings for main branch."
+            python3 scripts/codemender.py find --format=markdown --fail-on-findings
+          else
+            echo "ℹ️ Advisory Audit Mode Active: Report findings for developer branch (${{ github.ref }})."
+            python3 scripts/codemender.py find --format=markdown
+          fi
 
       - name: Run Unit Tests
         run: uv run pytest tests/unit

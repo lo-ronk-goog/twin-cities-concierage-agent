@@ -34,15 +34,14 @@ graph TD
 The project features a full DevOps CI/CD pipeline built on **GitHub Actions** and secured via **Workload Identity Federation (WIF)**, eliminating the need to store static GCP service account keys in GitHub.
 
 ### Pipeline Workflow Strategy:
-1. **Continuous Integration (CI) on `dev` / Pull Requests to `main`**: 
-   - Every push to `dev` or PR to `main` triggers the automated validation pipeline.
-   - It authenticates to GCP via WIF, installs dependencies, and executes:
-     - **CodeMender Security Gate**: Scans MCP tools and database callers for vulnerabilities, generating PoC analysis and remediation summaries for Human-in-the-Loop review directly in `$GITHUB_STEP_SUMMARY`.
-     - **Unit & Integration Tests**: Runs `uv run pytest tests/unit` to verify business logic and tool contracts.
-     - **Agent Evaluations**: Executes `agents-cli eval run` via `./agent test` to measure model alignment and response quality.
-2. **Continuous Delivery (CD) on `main`**:
-   - Once all gates pass and the pull request is merged into the `main` branch, the deployment pipeline is triggered.
-   - It packages and deploys the agent code to the Vertex AI Reasoning Engine on GCP.
+1. **Continuous Integration (CI) on `dev` (Advisory / Audit Mode)**: 
+   - Every push to `dev` triggers the automated validation pipeline.
+   - Runs the **CodeMender Security Gate in Audit Mode** (surfacing findings, PoC traces, and remediation diffs in `$GITHUB_STEP_SUMMARY` without breaking the build), followed by unit tests and agent evaluations.
+   - Allows developers to iterate rapidly while maintaining full security visibility.
+2. **Quality Gate & Continuous Delivery (CD) on `main` (Strict Blocking Gate)**:
+   - Any pull request targeting `main` or push to `main` enforces the **Strict Blocking Gate** (`--fail-on-findings`).
+   - If unreviewed vulnerabilities exist, the pipeline halts immediately, blocking unit tests, evals, and deployment until a human reviews and mends the code.
+   - Once all gates pass and the pull request is merged, the agent is deployed to the Vertex AI Reasoning Engine on GCP.
 
 ### CI/CD Pipeline Flow with CodeMender:
 
