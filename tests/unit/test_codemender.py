@@ -49,3 +49,24 @@ def test_markdown_summary_clean():
     md = format_markdown_summary([])
     assert "Passed" in md
     assert "No security vulnerabilities" in md
+
+
+def test_pr_comment_formatting():
+    """Verify GitHub PR comment includes 1-click suggestion block."""
+    from scripts.codemender import format_pr_comment
+    finding = Finding(
+        id="TEST-002",
+        title="Test Injection",
+        severity="HIGH",
+        cwe="CWE-89",
+        file_path="app/tools.py",
+        line_number=20,
+        vulnerable_code="client.query(query)",
+        remediation_suggestion="Validate query",
+        poc_explanation="Exploit description",
+        remediated_code="if not query.startswith('SELECT'): raise ValueError()\nclient.query(query)",
+    )
+    comment = format_pr_comment([finding])
+    assert "```suggestion" in comment
+    assert "Human-in-the-Loop" in comment
+    assert "TEST-002" in comment

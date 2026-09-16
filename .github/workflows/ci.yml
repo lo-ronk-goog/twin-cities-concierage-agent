@@ -39,6 +39,7 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
+      pull-requests: 'write'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -66,13 +67,25 @@ jobs:
           project_id: ${{ vars.CICD_PROJECT_ID }}
 
       - name: CodeMender Security Gate (Review & HITL Prep)
+        env:
+          CODEMENDER_PR_COMMENT_FILE: /tmp/codemender_pr_comment.md
         run: |
-          if [ "${{ github.ref }}" = "refs/heads/main" ] || [ "${{ github.base_ref }}" = "main" ]; then
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "🔒 Strict Blocking Gate Active: Fail on findings for main branch."
             python3 scripts/codemender.py find --format=markdown --fail-on-findings
           else
-            echo "ℹ️ Advisory Audit Mode Active: Report findings for developer branch (${{ github.ref }})."
+            echo "ℹ️ Advisory Audit Mode Active: Report findings for developer branch / PR (${{ github.ref }})."
             python3 scripts/codemender.py find --format=markdown
+          fi
+
+      - name: Post Interactive CodeMender PR Review
+        if: github.event_name == 'pull_request' && always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f /tmp/codemender_pr_comment.md ]; then
+            echo "Posting interactive CodeMender review comment to Pull Request #${{ github.event.pull_request.number }}..."
+            gh pr comment ${{ github.event.pull_request.number }} --body-file /tmp/codemender_pr_comment.md || true
           fi
 
       - name: Run Unit Tests

@@ -181,6 +181,37 @@ def format_markdown_summary(findings: List[Finding]) -> str:
     return "\n".join(md)
 
 
+def format_pr_comment(findings: List[Finding]) -> str:
+    """Format interactive Pull Request review comment for GitHub with 1-click suggestion diffs."""
+    if not findings:
+        return (
+            "## 🛡️ CodeMender Security Gate: Passed\n\n"
+            "✅ **All agent tools and MCP interfaces are verified secure.** No action required."
+        )
+
+    md = [
+        "## 🛡️ CodeMender Security Gate: Action Required\n",
+        f"⚠️ **Found {len(findings)} vulnerability requiring Human-in-the-Loop review.**\n\n",
+        "| ID | Severity | CWE | Title | File | Line |",
+        "| :--- | :--- | :--- | :--- | :--- | :--- |",
+    ]
+    for f in findings:
+        md.append(f"| `{f.id}` | **{f.severity}** | `{f.cwe}` | {f.title} | `{f.file_path}` | `{f.line_number}` |")
+
+    md.append("\n### 🔍 Human-in-the-Loop Review & 1-Click Remediation\n")
+    for f in findings:
+        md.append(f"#### `{f.id}`: {f.title}")
+        md.append(f"- **Location:** `{f.file_path}:{f.line_number}`")
+        md.append(f"- **PoC Exploit Analysis:**\n> {f.poc_explanation.replace(chr(10), ' ')}")
+        md.append("\nTo apply CodeMender's synthesized remediation directly to this Pull Request, commit this suggestion:")
+        md.append("```suggestion")
+        md.append(f.remediated_code)
+        md.append("```\n")
+
+    md.append("> [!TIP]\n> **Local Dev Verification**: You can also review and fix locally with `./agent review`.")
+    return "\n".join(md)
+
+
 def run_demo(engine: CodeMenderEngine, interactive: bool = True):
     """Run an interactive demonstration of the CodeMender dev workflow."""
     print("\n" + "=" * 70)
@@ -303,6 +334,11 @@ def main():
         if gh_step_summary:
             with open(gh_step_summary, "a", encoding="utf-8") as f:
                 f.write(format_markdown_summary(findings) + "\n")
+
+        # Write PR comment payload if requested
+        pr_comment_file = os.getenv("CODEMENDER_PR_COMMENT_FILE")
+        if pr_comment_file:
+            Path(pr_comment_file).write_text(format_pr_comment(findings), encoding="utf-8")
 
         if args.fail_on_findings and findings:
             sys.exit(1)
