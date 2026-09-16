@@ -38,9 +38,12 @@ project_id = (
 )
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
 os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ.get(
-    "GOOGLE_CLOUD_LOCATION", "us-central1"
+    "GOOGLE_CLOUD_LOCATION", "global"
 )
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
+os.environ["GOOGLE_API_USE_CLIENT_CERTIFICATE"] = os.environ.get(
+    "GOOGLE_API_USE_CLIENT_CERTIFICATE", "false"
+)
 
 logger = logging.getLogger("app.agent")
 
@@ -76,7 +79,7 @@ async def generate_memories_callback(callback_context: CallbackContext):
 root_agent = Agent(
     name="twin_cities_concierge_agent",
     model=Gemini(
-        model="gemini-2.5-flash",
+        model="gemini-3.8-flash",
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction=persona_instruction,
