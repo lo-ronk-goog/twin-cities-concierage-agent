@@ -20,8 +20,9 @@ Implement agent logic in `app/`. Use `agents-cli playground` for interactive tes
 ### Phase 3: The Evaluation Loop (Main Iteration Phase)
 Start with 1-2 eval cases, run `agents-cli eval run`, iterate. Expect 5-10+ iterations. See the **Evaluation Guide** for metrics, evalset schema, LLM-as-judge config, and common gotchas.
 
-### Phase 4: Pre-Deployment Tests
-Run `uv run pytest tests/unit tests/integration`. Fix issues until all tests pass.
+### Phase 4: CodeMender Security Review & Pre-Deployment Tests
+1. Run `./agent review` or `./agent mender find` to detect and remediate vulnerabilities in agent MCP tools and BigQuery SQL builders with Human-in-the-Loop review.
+2. Run `uv run pytest tests/unit tests/integration`. Fix issues until all tests pass.
 
 ### Phase 5: Deploy to Dev
 **Requires explicit human approval.** Run `agents-cli deploy` only after user confirms. See the **Deployment Guide** for details.
@@ -33,6 +34,8 @@ Ask the user: Option A (simple single-project) or Option B (full CI/CD pipeline 
 
 | Command | Purpose |
 |---------|---------|
+| `./agent review` | Interactive CodeMender security review & HITL demo |
+| `./agent mender [cmd]` | Run CodeMender security analysis (`find`, `verify`, `fix`) |
 | `agents-cli playground` | Interactive local testing |
 | `uv run pytest tests/unit tests/integration` | Run unit and integration tests |
 | `agents-cli eval run` | Run evaluation against evalsets |

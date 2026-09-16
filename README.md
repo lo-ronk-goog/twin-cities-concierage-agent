@@ -83,9 +83,19 @@ sequenceDiagram
 
 ---
 
-## 🛡️ CodeMender Dev Workflow & HITL Demo
+## 🛡️ CodeMender Dev Workflow & HITL Review Gate
 
-CodeMender provides autonomous vulnerability detection, sandbox exploit verification, and patch synthesis with Human-in-the-Loop (HITL) review.
+[CodeMender](https://deepmind.google) is an autonomous, AI-driven security and remediation agent developed by Google DeepMind and delivered via the Gemini Enterprise Agent Platform. It proactively eliminates security vulnerabilities in MCP tools and BigQuery SQL queries before they can reach production.
+
+### Workflow Stages:
+1. **Discovery (`cm find`)**: Scans agent tools and database callers using Gemini-powered static analysis to detect vulnerabilities (such as SQL injection, unvalidated ReAct execution paths, and secret leaks).
+2. **Sandbox PoC Verification (`cm verify`)**: Synthesizes and executes a safe proof-of-concept (PoC) exploit in an isolated sandbox to confirm genuine exploitability, eliminating false positives.
+3. **Autonomous Patch Synthesis (`cm fix`)**: Synthesizes an idiomatic security fix and automatically runs the unit test suite (`uv run pytest tests/unit`) in the sandbox to ensure no functional regressions are introduced.
+4. **Human-in-the-Loop (HITL) Review**:
+   - **Locally**: Prompts the developer (`[Y/n]`) in the terminal before applying changes to the working tree.
+   - **In GitHub Actions**: Generates a rich Markdown audit report directly in the GitHub **Job Summary** (`$GITHUB_STEP_SUMMARY`) displaying vulnerability details, PoC analysis, and the proposed remediation diff for maintainer sign-off.
+5. **Unit & Regression Testing**: Runs `pytest` to guarantee all contracts and persona configs remain intact.
+6. **Deployment Gate**: Only when CodeMender and all test suites pass does the pipeline allow deployment to the Vertex AI Reasoning Engine.
 
 ### Running the Workflow Locally:
 ```bash
@@ -127,6 +137,9 @@ twin-cities-concierge-agent/
 
 | Action | Command | Description |
 | :--- | :--- | :--- |
+| **CodeMender Review** | `./agent review` | Runs interactive CodeMender security review & HITL demo |
+| **CodeMender CLI** | `./agent mender [cmd]` | Runs `find`, `verify`, or `fix` security operations |
+| **Unit Tests** | `uv run pytest tests/unit` | Runs local configuration and CodeMender unit tests |
 | **Install** | `agents-cli install` | Syncs virtual environment dependencies |
 | **Playground** | `agents-cli playground` | Launches local interactive agent UI |
 | **Run Evals** | `./agent test` | Evaluates agent persona against test sets |
