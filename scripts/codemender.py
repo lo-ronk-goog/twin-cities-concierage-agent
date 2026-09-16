@@ -99,8 +99,16 @@ class CodeMenderEngine:
                     content = file_path.read_text(encoding="utf-8")
                     lines = content.splitlines()
                     for idx, line in enumerate(lines, start=1):
-                        # Pattern 1: Potential SQL string injection
-                        if ("client.query(query)" in line or "f\"SELECT" in line) and "read_only" not in content:
+                        has_validation = any(
+                            kw in content
+                            for kw in [
+                                "startswith('SELECT')",
+                                'startswith("SELECT")',
+                                "is_safe_readonly",
+                                "read_only_validated",
+                            ]
+                        )
+                        if ("client.query(query)" in line or 'f"SELECT' in line) and not has_validation:
                             findings.append(
                                 Finding(
                                     id=f"CM-SEC-{len(findings)+1:03d}",
@@ -126,7 +134,7 @@ class CodeMenderEngine:
                 except Exception:
                     continue
 
-        return findings if findings else SAMPLE_FINDINGS
+        return findings
 
     def run_tests(self) -> tuple[bool, str]:
         """Run project unit tests using uv and pytest."""

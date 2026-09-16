@@ -4,16 +4,23 @@ from pathlib import Path
 from scripts.codemender import CodeMenderEngine, format_markdown_summary, Finding
 
 
-def test_codemender_scanner():
-    """Verify that CodeMenderEngine scans the workspace and detects findings."""
+def test_codemender_scanner_clean():
+    """Verify that CodeMenderEngine confirms app is clean after remediation."""
     root_dir = Path(__file__).resolve().parent.parent.parent
     engine = CodeMenderEngine(root_dir)
     findings = engine.scan_codebase(["app"])
-    assert len(findings) > 0
-    first = findings[0]
-    assert first.severity in ("HIGH", "CRITICAL", "MEDIUM", "LOW")
-    assert "SQL" in first.title or "Unvalidated" in first.title
-    assert first.file_path.endswith(".py")
+    assert len(findings) == 0
+
+
+def test_codemender_scanner_detects_vulnerability(tmp_path):
+    """Verify that CodeMenderEngine detects unvalidated SQL execution."""
+    vuln_file = tmp_path / "unsafe_tool.py"
+    vuln_file.write_text("client = bigquery.Client()\nquery_job = client.query(query)\n", encoding="utf-8")
+    engine = CodeMenderEngine(tmp_path)
+    findings = engine.scan_codebase([tmp_path])
+    assert len(findings) == 1
+    assert findings[0].severity == "HIGH"
+    assert "Unvalidated" in findings[0].title
 
 
 def test_markdown_summary_generation():

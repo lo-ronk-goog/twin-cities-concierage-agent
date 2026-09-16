@@ -47,6 +47,11 @@ def execute_sql_readonly(query: str) -> str:
         logger.info(
             f"Executing BigQuery query directly via google.cloud.bigquery: {query}"
         )
+        # CodeMender Remediation: Read-only query validation
+        trimmed_query = query.strip().upper()
+        if not (trimmed_query.startswith("SELECT") or trimmed_query.startswith("WITH")):
+            raise ValueError("Security violation: Only read-only SELECT queries are permitted.")
+
         client = bigquery.Client(project=project, credentials=credentials)
         query_job = client.query(query)
         rows = [dict(row) for row in query_job.result()]
