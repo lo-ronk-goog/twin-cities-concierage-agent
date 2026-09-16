@@ -16,6 +16,9 @@ on:
       - 'app/**'
       - 'agent'
       - 'pyproject.toml'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/ci.yml'
   push:
     branches:
       - main
@@ -24,11 +27,14 @@ on:
       - 'app/**'
       - 'agent'
       - 'pyproject.toml'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/ci.yml'
 
 jobs:
   test:
     name: Run Agent Tests
-    if: github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/dev')
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && (github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'))
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
@@ -59,11 +65,19 @@ jobs:
           create_credentials_file: true
           project_id: ${{ vars.CICD_PROJECT_ID }}
 
+      - name: CodeMender Security Gate (Review & HITL Prep)
+        run: |
+          python3 scripts/codemender.py find --format=markdown
+
+      - name: Run Unit Tests
+        run: uv run pytest tests/unit
+
       - name: Run Evals (agent test)
         run: ./agent test
 
   deploy:
     name: Deploy to Production
+    needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production

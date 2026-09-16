@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+export PATH="/opt/homebrew/bin:$PATH"
 
 COMMAND=$1
 
@@ -40,8 +40,32 @@ case "$COMMAND" in
     fi
     uv run --with pyyaml --with google-agents-cli==0.1.3 python deploy.py "$STAGE" "$DISPLAY_NAME"
     ;;
+  mender)
+    shift || true
+    SUBCOMMAND=${1:-demo}
+    echo "========================================="
+    echo "🛡️  Running CodeMender ($SUBCOMMAND)..."
+    echo "========================================="
+    if [[ "$SUBCOMMAND" == -* ]]; then
+      python3 scripts/codemender.py demo "$SUBCOMMAND" "$@"
+    else
+      shift || true
+      python3 scripts/codemender.py "$SUBCOMMAND" "$@"
+    fi
+    ;;
+  review)
+    shift || true
+    echo "========================================="
+    echo "🛡️  Running CodeMender Review (demo)..."
+    echo "========================================="
+    python3 scripts/codemender.py demo "$@"
+    ;;
   *)
-    echo "Usage: ./agent {test|deploy}"
+    echo "Usage: ./agent {test|deploy|mender|review}"
+    echo "  ./agent test                - Run agent evaluations"
+    echo "  ./agent deploy [staging]    - Deploy to Vertex AI Agent Engine"
+    echo "  ./agent mender [cmd]        - Run CodeMender (find, verify, fix, demo)"
+    echo "  ./agent review              - Run interactive CodeMender demo workflow"
     exit 1
     ;;
 esac

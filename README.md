@@ -34,37 +34,42 @@ graph TD
 The project features a full DevOps CI/CD pipeline built on **GitHub Actions** and secured via **Workload Identity Federation (WIF)**, eliminating the need to store static GCP service account keys in GitHub.
 
 ### Pipeline Workflow Strategy:
-1. **Continuous Integration (CI) on `dev`**: 
-   - Every push to the `dev` branch triggers the test pipeline.
-   - It authenticates to GCP, spins up the environment, and runs automated unit tests and agent evaluations (`agents-cli eval run`).
-   - This ensures that code changes are fully validated before any merge request can be created.
+1. **Continuous Integration (CI) on `dev` / Pull Requests to `main`**: 
+   - Every push to `dev` or PR to `main` triggers the automated validation pipeline.
+   - It authenticates to GCP via WIF, installs dependencies, and executes:
+     - **CodeMender Security Gate**: Scans MCP tools and database callers for vulnerabilities, generating PoC analysis and remediation summaries for Human-in-the-Loop review directly in `$GITHUB_STEP_SUMMARY`.
+     - **Unit & Integration Tests**: Runs `uv run pytest tests/unit` to verify business logic and tool contracts.
+     - **Agent Evaluations**: Executes `agents-cli eval run` via `./agent test` to measure model alignment and response quality.
 2. **Continuous Delivery (CD) on `main`**:
-   - Once tests are successful and the pull request is merged into the `main` branch, the deployment pipeline is triggered.
+   - Once all gates pass and the pull request is merged into the `main` branch, the deployment pipeline is triggered.
    - It packages and deploys the agent code to the Vertex AI Reasoning Engine on GCP.
 
-### CI/CD Pipeline Flow:
+### CI/CD Pipeline Flow with CodeMender:
 
 ```mermaid
 sequenceDiagram
     autonumber
     actor Developer
-    participant GitDev as Git dev branch
+    participant GitDev as Git dev / PR
     participant GHA as GitHub Actions Runner
+    participant CM as CodeMender Engine
     participant GitMain as Git main branch
     participant AE as Vertex AI Agent Engine
 
     Developer->>GitDev: Push changes (e.g. app/agent.py)
     activate GitDev
-    GitDev->>GHA: Trigger CI Workflow (push: dev)
+    GitDev->>GHA: Trigger CI Workflow
     activate GHA
     GHA->>GHA: Authenticate via WIF
+    GHA->>CM: CodeMender Security Gate (find & verify)
+    CM-->>GHA: Security Findings & HITL Step Summary
     GHA->>GHA: Run Unit Tests (pytest)
     GHA->>GHA: Run Evaluations (agents-cli eval run)
-    GHA-->>Developer: CI Result: SUCCESS
+    GHA-->>Developer: CI Result: PASSED (or HITL Action Required)
     deactivate GHA
     deactivate GitDev
 
-    Developer->>GitMain: Create & Merge Pull Request
+    Developer->>GitMain: Merge Approved Pull Request
     activate GitMain
     GitMain->>GHA: Trigger CD Workflow (push: main)
     activate GHA
@@ -78,11 +83,28 @@ sequenceDiagram
 
 ---
 
+## 🛡️ CodeMender Dev Workflow & HITL Demo
+
+CodeMender provides autonomous vulnerability detection, sandbox exploit verification, and patch synthesis with Human-in-the-Loop (HITL) review.
+
+### Running the Workflow Locally:
+```bash
+# 1. Run the interactive end-to-end demo (Scan -> PoC -> HITL Prompt -> Unit Tests)
+./agent review
+
+# 2. Or run specific CodeMender operations
+./agent mender find         # Scan codebase for security vulnerabilities
+./agent mender verify       # Run isolated sandbox PoC exploit verification
+./agent mender fix          # Synthesize patch and run regression tests
+```
+
+---
+
 ## 📂 Project Structure
 
 ```
 twin-cities-concierge-agent/
-├── .github/workflows/         # CI/CD workflows (ci.yml)
+├── .github/workflows/         # CI/CD workflows (ci.yml with CodeMender gate)
 ├── app/                       # Core agent implementation
 │   ├── agent.py               # Persona instructions & tool definitions
 │   ├── tools.py               # MCP BigQuery toolset configuration
@@ -90,8 +112,10 @@ twin-cities-concierge-agent/
 │   └── agent_runtime_app.py   # ADK entrypoint application logic
 ├── deployment/                # Environment infrastructure
 │   └── terraform/             # IaC definitions (WIF, datasets, sinks)
+├── scripts/                   # Workflow scripts
+│   └── codemender.py          # CodeMender CLI orchestrator & HITL demo engine
 ├── tests/                     # Validation suite
-│   ├── unit/                  # Local configuration unit tests
+│   ├── unit/                  # Local configuration & CodeMender unit tests
 │   └── eval/                  # Persona-based agent evaluation cases
 ├── agent                      # Wrapper script for CI/CD commands
 └── agent.yaml                 # Deployment manifest parameters
