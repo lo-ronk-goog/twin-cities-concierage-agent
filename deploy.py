@@ -60,6 +60,7 @@ def main():
         display_name=display_name,
         service_account=None if gateway_name else service_account,
         agent_identity=True,
+        set_env_vars="GOOGLE_CLOUD_LOCATION=global",
     )
 
 

@@ -37,9 +37,7 @@ project_id = (
     or "lpr-gemini-enterprise-1"
 )
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ.get(
-    "GOOGLE_CLOUD_LOCATION", "global"
-)
+os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 os.environ["GOOGLE_API_USE_CLIENT_CERTIFICATE"] = os.environ.get(
     "GOOGLE_API_USE_CLIENT_CERTIFICATE", "false"

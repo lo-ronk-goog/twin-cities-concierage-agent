@@ -198,3 +198,9 @@ my_env.tfvars
 
 # A2A Inspector
 tools/a2a-inspector/
+
+# Local eval & scratch
+app/.adk/eval_history/
+deployment/.adk/
+agent_config.json
+twin-cities-concierge-ingress-gateway.yaml

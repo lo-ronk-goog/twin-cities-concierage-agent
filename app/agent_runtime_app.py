@@ -49,8 +49,16 @@ class AgentEngineApp(AdkApp):
             self.logger = logging_client.logger(__name__)
         except Exception:
             self.logger = logging.getLogger(__name__)
-        if gemini_location:
-            os.environ["GOOGLE_CLOUD_LOCATION"] = gemini_location
+        # Ensure Gemini model inference uses the global endpoint required for gemini-3.8-flash
+        self._reset_gemini_client()
+
+    def _reset_gemini_client(self) -> None:
+        os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
+        app = self._tmpl_attrs.get("app")
+        if app and hasattr(app, "root_agent"):
+            model = getattr(app.root_agent, "model", None)
+            if model and "api_client" in getattr(model, "__dict__", {}):
+                del model.__dict__["api_client"]
 
     def project_id(self) -> str | None:
         """Return the resolved project ID."""
@@ -59,6 +67,23 @@ class AgentEngineApp(AdkApp):
             or os.environ.get("GOOGLE_CLOUD_PROJECT")
             or "lpr-gemini-enterprise-1"
         )
+
+    async def streaming_agent_run_with_events(self, request_json: str):
+        """Streaming agent run for Gemini Enterprise / AgentSpace with global location ensured."""
+        self._reset_gemini_client()
+        async for event in super().streaming_agent_run_with_events(request_json):
+            yield event
+
+    def stream_query(self, *args, **kwargs):
+        """Stream query with global location ensured."""
+        self._reset_gemini_client()
+        return super().stream_query(*args, **kwargs)
+
+    async def async_stream_query(self, *args, **kwargs):
+        """Async stream query with global location ensured."""
+        self._reset_gemini_client()
+        async for event in super().async_stream_query(*args, **kwargs):
+            yield event
 
     def register_feedback(self, feedback: dict[str, Any]) -> None:
         """Collect and log feedback."""
@@ -72,7 +97,6 @@ class AgentEngineApp(AdkApp):
         return operations
 
 
-gemini_location = os.environ.get("GOOGLE_CLOUD_LOCATION")
 project_id = os.environ.get("GOOGLE_CLOUD_PROJECT") or "lpr-gemini-enterprise-1"
 engine_location = (
     os.environ.get("GOOGLE_CLOUD_AGENT_ENGINE_LOCATION")
@@ -80,8 +104,7 @@ engine_location = (
     or "us-central1"
 )
 vertexai.init(project=project_id, location=engine_location)
-if gemini_location:
-    os.environ["GOOGLE_CLOUD_LOCATION"] = gemini_location
+os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
 
 logs_bucket_name = os.environ.get("LOGS_BUCKET_NAME")
 agent_runtime = AgentEngineApp(
