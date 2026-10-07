@@ -21,7 +21,7 @@ from google.adk.apps import App
 from google.adk.models import Gemini
 from google.genai import types
 
-from app.tools import execute_sql_tool
+from app.tools import execute_sql_tool, query_brunch_tool
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 from google.adk.agents.callback_context import CallbackContext
 
@@ -61,6 +61,7 @@ persona_instruction = (
     "3. `events`: Contains `event_id`, `venue_id`, `event_date`, `artist`, `genre`, and `start_time`.\n\n"
     "When you need to look up venue, event, or operating hours data, invoke the `execute_sql_readonly` tool "
     "with a valid BigQuery SQL query in the `query` argument (e.g. querying `lpr-gemini-enterprise-1.msp_coffee_and_music.venues`). "
+    "For brunch menus and weekend specials, you can also invoke the `query_brunch_specials` tool. "
     "Never output raw SQL code to the user."
 )
 
@@ -83,7 +84,7 @@ root_agent = Agent(
         retry_options=types.HttpRetryOptions(attempts=3),
     ),
     instruction=persona_instruction,
-    tools=[execute_sql_tool, PreloadMemoryTool()],
+    tools=[execute_sql_tool, query_brunch_tool, PreloadMemoryTool()],
     after_agent_callback=generate_memories_callback,
 )
 
