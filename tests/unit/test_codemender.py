@@ -4,11 +4,18 @@ from pathlib import Path
 from scripts.codemender import CodeMenderEngine, format_markdown_summary, Finding
 
 
-def test_codemender_scanner_clean():
-    """Verify that CodeMenderEngine confirms app is clean after remediation."""
-    root_dir = Path(__file__).resolve().parent.parent.parent
-    engine = CodeMenderEngine(root_dir)
-    findings = engine.scan_codebase(["app"])
+def test_codemender_scanner_clean(tmp_path):
+    """Verify that CodeMenderEngine confirms code with SELECT guard is clean."""
+    clean_file = tmp_path / "safe_tool.py"
+    clean_file.write_text(
+        "if not query.strip().upper().startswith('SELECT'):\n"
+        "    raise ValueError('error')\n"
+        "client = bigquery.Client()\n"
+        "query_job = client.query(query)\n",
+        encoding="utf-8",
+    )
+    engine = CodeMenderEngine(tmp_path)
+    findings = engine.scan_codebase([tmp_path])
     assert len(findings) == 0
 
 

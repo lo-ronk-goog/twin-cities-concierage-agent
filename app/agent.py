@@ -27,9 +27,31 @@ from google.adk.agents.callback_context import CallbackContext
 
 # CI/CD Trigger: Testing merge path and validation pipeline run.
 try:
-    _, default_project_id = google.auth.default()
+    _creds, default_project_id = google.auth.default()
+    import google.auth.transport.requests
+    _creds.refresh(google.auth.transport.requests.Request())
 except Exception:
     default_project_id = "lpr-gemini-enterprise-1"
+    try:
+        import subprocess
+        from google.oauth2.credentials import Credentials as OAuth2Credentials
+
+        _token = (
+            subprocess.check_output(
+                ["gcloud", "auth", "print-access-token"], timeout=10
+            )
+            .decode()
+            .strip()
+        )
+        if _token:
+            _fallback_creds = OAuth2Credentials(_token)
+
+            def _fallback_default(*args, **kwargs):
+                return _fallback_creds, "lpr-gemini-enterprise-1"
+
+            google.auth.default = _fallback_default
+    except Exception:
+        pass
 
 project_id = (
     os.environ.get("GOOGLE_CLOUD_PROJECT")
@@ -37,9 +59,7 @@ project_id = (
     or "lpr-gemini-enterprise-1"
 )
 os.environ["GOOGLE_CLOUD_PROJECT"] = project_id
-os.environ["GOOGLE_CLOUD_LOCATION"] = os.environ.get(
-    "GOOGLE_CLOUD_LOCATION", "global"
-)
+os.environ["GOOGLE_CLOUD_LOCATION"] = "global"
 os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "True"
 os.environ["GOOGLE_API_USE_CLIENT_CERTIFICATE"] = os.environ.get(
     "GOOGLE_API_USE_CLIENT_CERTIFICATE", "false"
