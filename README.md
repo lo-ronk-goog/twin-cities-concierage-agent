@@ -6,26 +6,28 @@ The agent operates in a **ReAct loop**, writing and executing SQL queries to ver
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ System Architecture & AI Ops Gitflow
 
-The following diagram illustrates how the user, the Vertex AI Agent Engine, the Python ADK framework, the Stdio-based MCP server, and BigQuery interact:
+The following high-level architecture diagram illustrates the enterprise agentic SDLC and Gitflow pipeline, moving from local ideation to production under strict governance:
 
-```mermaid
-graph TD
-    User([User]) <-->|Chat Interface| AE[Vertex AI Agent Engine]
-    subgraph AE [Agent Engine Runtime]
-        ADK[ADK Agent Framework] <-->|ReAct Loop| Agent[twin_cities_concierge_agent Agent]
-        Agent <-->|Stdio Stream| MCP[BigQuery MCP Server]
-    end
-    MCP <-->|BigQuery API| BQ[(GCP BigQuery DB)]
-    BQ -.-> V[venues table]
-    BQ -.-> O[operating_hours table]
-    BQ -.-> E[events table]
-    
-    style User fill:#e1f5fe,stroke:#039be5,stroke-width:2px
-    style AE fill:#f3e5f5,stroke:#8e24aa,stroke-width:2px
-    style BQ fill:#efebe9,stroke:#5d4037,stroke-width:2px
-```
+![AI Ops Gitflow Architecture](ai_ops_high_level_clean.png)
+
+### Core Stages:
+1. **Developer & Ideation (Left)**:
+   - Developer operates within **Antigravity IDE** (Cloud Workstation Zero-Trust Sandbox).
+   - Scaffolds boilerplate and generates golden evaluation test harnesses with 1st and 3rd party models via Model Garden.
+2. **Dev Branch (CI Pipeline & Local Validation)**:
+   - On `git push` to `dev`, the GitHub Actions CI pipeline triggers automated testing.
+   - **Wiz + CodeMender Agent (Audit Mode)**: Scans agent tools and BigQuery SQL builders for vulnerabilities (e.g. CWE-89 injection). Surfaces findings and automated diffs as PR comments without blocking developer iteration.
+   - **Unit & Golden Evals**: Evaluates persona relevance, truthfulness, and safety rubrics against curated golden response baselines.
+   - **Integration Tests**: Tests runtime tool contracts and mock MCP database calls.
+   - **Outcomes**: If any test fails, the pull request fails with automated feedback loop-back. If all tests pass, the PR qualifies for **Mandatory Lead Engineer HITL Sign-Off**.
+3. **Security Guardrails (Central Policy)**:
+   - Managed by the central security team via Wiz Security Scanners (SAST/SCA & Container scanning) and central policy definitions.
+4. **Production Main (Gitflow Stage 4)**:
+   - When the PR is approved and merged into `main`, the CD pipeline activates the **Strict Blocking Gate** (`python3 scripts/codemender.py find --fail-on-findings`).
+   - Any unreviewed or unresolved security vulnerabilities immediately halt the build.
+   - Once cleared, **Agent CLI** packages and deploys the agent microservice to **Vertex AI Reasoning Engine on GCP**.
 
 ---
 
@@ -136,11 +138,11 @@ twin-cities-concierge-agent/
 
 | Action | Command | Description |
 | :--- | :--- | :--- |
+| **Simulate Session** | `./agent simulate [--auto]` | Interactive or auto-streaming concierge session simulator |
 | **CodeMender Review** | `./agent review` | Runs interactive CodeMender security review & HITL demo |
 | **CodeMender CLI** | `./agent mender [cmd]` | Runs `find`, `verify`, or `fix` security operations |
-| **Unit Tests** | `uv run pytest tests/unit` | Runs local configuration and CodeMender unit tests |
-| **Install** | `agents-cli install` | Syncs virtual environment dependencies |
-| **Playground** | `agents-cli playground` | Launches local interactive agent UI |
+| **Strict Blocking Gate** | `python3 scripts/codemender.py find --fail-on-findings` | Enforces zero security findings before production deploy |
+| **Unit Tests** | `python3 -m unittest discover -s tests/unit` | Runs local configuration and CodeMender unit tests |
 | **Run Evals** | `./agent test` | Evaluates agent persona against test sets |
 | **Deploy** | `./agent deploy` | Deploys the local agent to Vertex AI Agent Engine |
-| **IaC Provision** | `agents-cli infra cicd` | Provisions GCP WIF infrastructure and registers secrets |
+| **Demo Runbook** | `cat DEMO_GUIDE.md` | 15-minute presentation script matching presentation slides |
