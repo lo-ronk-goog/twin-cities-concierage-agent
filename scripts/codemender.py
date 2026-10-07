@@ -99,8 +99,9 @@ class CodeMenderEngine:
                     content = file_path.read_text(encoding="utf-8")
                     lines = content.splitlines()
                     for idx, line in enumerate(lines, start=1):
+                        preceding_block = "\n".join(lines[max(0, idx - 10):idx])
                         has_validation = any(
-                            kw in content
+                            kw in preceding_block
                             for kw in [
                                 "startswith('SELECT')",
                                 'startswith("SELECT")',
