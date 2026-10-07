@@ -60,12 +60,17 @@ case "$COMMAND" in
     echo "========================================="
     python3 scripts/codemender.py demo "$@"
     ;;
+  simulate)
+    shift || true
+    python3 simulate_session.py "$@"
+    ;;
   *)
-    echo "Usage: ./agent {test|deploy|mender|review}"
+    echo "Usage: ./agent {test|deploy|mender|review|simulate}"
     echo "  ./agent test                - Run agent evaluations"
     echo "  ./agent deploy [staging]    - Deploy to Vertex AI Agent Engine"
     echo "  ./agent mender [cmd]        - Run CodeMender (find, verify, fix, demo)"
     echo "  ./agent review              - Run interactive CodeMender demo workflow"
+    echo "  ./agent simulate [--auto]   - Run interactive/live concierge session simulator"
     exit 1
     ;;
 esac

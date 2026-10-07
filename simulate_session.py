@@ -21,7 +21,17 @@ def print_header(title):
     print("=" * 80 + "\n")
 
 
-def simulate_interactive():
+def wait_for_user(auto_mode=False, pause_sec=2.0):
+    if auto_mode:
+        time.sleep(pause_sec)
+        return
+    try:
+        input("\033[1;30mPress [Enter] to simulate User response...\033[0m")
+    except (EOFError, KeyboardInterrupt):
+        time.sleep(pause_sec)
+
+
+def simulate_interactive(auto_mode=False):
     print_header("🤖 TWIN CITIES CONCIERGE — INTERACTIVE DEMO SIMULATOR")
 
     print(
@@ -104,7 +114,7 @@ def simulate_interactive():
 
     # Turn 2
     print("\n" + "-" * 80 + "\n")
-    input("\033[1;30mPress [Enter] to simulate User response...\033[0m")
+    wait_for_user(auto_mode)
     print(
         "\n\033[1;36m[User]:\033[0m That sounds great! After coffee, I'd love to see some live music later that night. Are there any events scheduled at local bars or jazz clubs on Thursday?"
     )
@@ -161,7 +171,7 @@ def simulate_interactive():
 
     # Turn 3
     print("\n" + "-" * 80 + "\n")
-    input("\033[1;30mPress [Enter] to simulate User response...\033[0m")
+    wait_for_user(auto_mode)
     print(
         "\n\033[1;36m[User]:\033[0m Awesome. I think I'll go with Icehouse! What are their operating hours on Thursdays?"
     )
@@ -201,4 +211,5 @@ def simulate_interactive():
 
 
 if __name__ == "__main__":
-    simulate_interactive()
+    auto = "--auto" in sys.argv or "--non-interactive" in sys.argv or not sys.stdin.isatty()
+    simulate_interactive(auto_mode=auto)

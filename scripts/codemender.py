@@ -137,10 +137,18 @@ class CodeMenderEngine:
         return findings
 
     def run_tests(self) -> tuple[bool, str]:
-        """Run project unit tests using uv and pytest."""
+        """Run project unit tests using uv, pytest, or python3 unittest."""
+        import shutil
         try:
+            if shutil.which("uv"):
+                cmd = ["uv", "run", "pytest", "tests/unit"]
+            elif shutil.which("pytest"):
+                cmd = ["pytest", "tests/unit"]
+            else:
+                cmd = [sys.executable, "-m", "unittest", "discover", "-s", "tests/unit"]
+
             res = subprocess.run(
-                ["uv", "run", "pytest", "tests/unit"],
+                cmd,
                 cwd=self.root_dir,
                 capture_output=True,
                 text=True,
