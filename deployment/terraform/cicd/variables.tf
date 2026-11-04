@@ -62,6 +62,7 @@ variable "app_sa_roles" {
     "roles/mcp.toolUser",
     "roles/bigquery.jobUser",
     "roles/bigquery.dataViewer",
+    "roles/modelarmor.user",
   ]
 }
 

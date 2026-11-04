@@ -15,7 +15,7 @@
 from google.adk.tools.preload_memory_tool import PreloadMemoryTool
 
 from app.agent import app, root_agent
-from app.tools import execute_sql_tool
+from app.tools import execute_sql_tool, query_brunch_tool
 
 
 def test_agent_config():
@@ -25,11 +25,13 @@ def test_agent_config():
     assert "jazz" in root_agent.instruction.lower()
     assert "coffee" in root_agent.instruction.lower()
 
-    # Check that both tools are registered
+    # Check that tools are registered
     assert execute_sql_tool in root_agent.tools
+    assert query_brunch_tool in root_agent.tools
     assert any(isinstance(t, PreloadMemoryTool) for t in root_agent.tools)
-    assert len(root_agent.tools) == 2
+    assert len(root_agent.tools) == 3
     assert root_agent.after_agent_callback is not None
+    assert root_agent.before_model_callback is not None
 
 
 def test_app_config():

@@ -47,6 +47,92 @@ os.environ["GOOGLE_API_USE_CLIENT_CERTIFICATE"] = os.environ.get(
 
 logger = logging.getLogger("app.agent")
 
+# Model Armor Configuration (defense-in-depth against prompt injection / jailbreak)
+model_armor_project = os.environ.get("MODEL_ARMOR_PROJECT", project_id)
+model_armor_location = os.environ.get("MODEL_ARMOR_LOCATION", "us-central1")
+model_armor_template_id = os.environ.get(
+    "MODEL_ARMOR_TEMPLATE_ID", "standard-template-for-prompts"
+)
+
+if model_armor_template_id.startswith("projects/"):
+    model_armor_template_name = model_armor_template_id
+else:
+    model_armor_template_name = (
+        f"projects/{model_armor_project}/locations/{model_armor_location}/templates/{model_armor_template_id}"
+    )
+
+MODEL_ARMOR_BLOCKED_MESSAGE = (
+    "🛡️ [Model Armor Guardrail]: Your request was blocked because it triggered "
+    "prompt security and safety policies (e.g., prompt injection or jailbreak detection)."
+)
+
+_model_armor_plugin_registered = False
+
+
+async def model_armor_guardrail_callback(
+    callback_context: CallbackContext, llm_request
+):
+    """Screens user prompts with Model Armor before dispatching to the LLM.
+
+    Provides in-app defense-in-depth sanitization to secure streaming (:streamQuery)
+    interactions when ingress gateway hooks are bypassed (platform issue b/555399867).
+    """
+    if _model_armor_plugin_registered:
+        return None
+
+    try:
+        from google.adk.models import LlmResponse
+        from google.api_core import client_options
+        from google.cloud import modelarmor_v1
+
+        if not llm_request or not getattr(llm_request, "contents", None):
+            return None
+
+        # Extract text from the latest user prompt
+        last_turn = llm_request.contents[-1]
+        text_parts = [
+            p.text
+            for p in getattr(last_turn, "parts", [])
+            if getattr(p, "text", None)
+        ]
+        if not text_parts:
+            return None
+        prompt_text = " ".join(text_parts)
+
+        endpoint = f"modelarmor.{model_armor_location}.rep.googleapis.com"
+        opts = client_options.ClientOptions(api_endpoint=endpoint)
+        client = modelarmor_v1.ModelArmorAsyncClient(client_options=opts)
+
+        request = modelarmor_v1.SanitizeUserPromptRequest(
+            name=model_armor_template_name,
+            user_prompt_data=modelarmor_v1.DataItem(text=prompt_text),
+        )
+        response = await client.sanitize_user_prompt(request=request)
+        result = getattr(response, "sanitization_result", None)
+
+        if (
+            result
+            and getattr(result, "filter_match_state", None)
+            == modelarmor_v1.FilterMatchState.MATCH_FOUND
+        ):
+            logger.warning(
+                "Model Armor in-app guardrail intercepted prompt injection/jailbreak: %s",
+                result,
+            )
+            return LlmResponse(
+                content=types.Content(
+                    role="model",
+                    parts=[types.Part.from_text(MODEL_ARMOR_BLOCKED_MESSAGE)],
+                )
+            )
+    except Exception as e:
+        # Graceful fail-open for local dev / unauthenticated environments
+        logger.warning(
+            "Model Armor in-app check bypassed or service unavailable: %s", e
+        )
+    return None
+
+
 persona_instruction = (
     "You are a friendly, expert local concierge for the Minneapolis-Twin Cities area. "
     "Your goal is to help users plan the perfect day or night out, specifically focusing on "
@@ -85,10 +171,36 @@ root_agent = Agent(
     ),
     instruction=persona_instruction,
     tools=[execute_sql_tool, query_brunch_tool, PreloadMemoryTool()],
+    before_model_callback=model_armor_guardrail_callback,
     after_agent_callback=generate_memories_callback,
 )
+
+plugins = []
+
+try:
+    from google.adk.integrations.model_armor import ModelArmorConfig, ModelArmorPlugin
+
+    model_armor_plugin = ModelArmorPlugin(
+        config=ModelArmorConfig(
+            prompt_template_name=model_armor_template_name,
+            block_on_screening_failure=False,
+            input_blocked_message=MODEL_ARMOR_BLOCKED_MESSAGE,
+        )
+    )
+    plugins.append(model_armor_plugin)
+    _model_armor_plugin_registered = True
+    logger.info(
+        "Registered ADK ModelArmorPlugin for template: %s",
+        model_armor_template_name,
+    )
+except Exception as e:
+    logger.info(
+        "Native ModelArmorPlugin not loaded (%s); using fallback before_model_callback.",
+        e,
+    )
 
 app = App(
     root_agent=root_agent,
     name="app",
+    plugins=plugins,
 )
